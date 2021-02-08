@@ -2,7 +2,7 @@ name: '@guardian Release'
 description: 'Run the CD process for Guardian repositories that define publishable libraries'
 runs:
   using: 'node12'
-  main: 'index.js'
+  main: 'dist/index.js'
 branding:
   icon: 'package'
   color: 'gray-dark'

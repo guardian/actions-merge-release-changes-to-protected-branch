@@ -2,13 +2,17 @@
   "name": "@guardian/release-action",
   "version": "1.0.0",
   "description": "A GitHub action to run the continuously deploy process for Guardian repositories",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "ncc build src/index.js -o dist"
   },
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
     "@actions/core": "^1.2.6"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.27.0"
   }
 }
