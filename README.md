@@ -20,6 +20,7 @@ tbd
 
 - Write in TS
 - Add linting and all the other fun things
-- Investigate using [@vercel/ncc](https://github.com/vercel/ncc) instead of checking in node_modules
+- ~Investigate using [@vercel/ncc](https://github.com/vercel/ncc) instead of checking in node_modules~
+- Provide option for the release branch?
 - Cater for other libraries (maven, etc.)
 - Upload artefacts
