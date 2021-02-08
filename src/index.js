@@ -1,13 +1,6 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 
-try {
-  console.log('Running @guardian/release');
-  decideAndTriggerAction(github.context.payload);
-} catch (error) {
-  core.setFailed(error.message);
-}
-
 /**
  * Decide what to do depending on the payload received
  *
@@ -45,3 +38,10 @@ const validateAndApproveReleasePR = (payload) => {};
  * @throws Throws an error if any of the preflight checks or the release process fail
  */
 const checkAndReleaseLibrary = (payload) => {};
+
+try {
+  console.log('Running @guardian/release');
+  decideAndTriggerAction(github.context.payload);
+} catch (error) {
+  core.setFailed(error.message);
+}
