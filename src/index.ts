@@ -16,18 +16,18 @@ import * as github from '@actions/github';
  * @throws Throws an error if the payload does not match any known conditions or if the underlying action throws an error
  */
 const decideAndTriggerAction = () => {
-  const eventName = github.context.eventName;
-  console.log(`Event name: ${eventName}`);
-  console.log(`Action type: ${github.context.payload.action}`);
+	const eventName = github.context.eventName;
+	console.log(`Event name: ${eventName}`);
+	console.log(`Action type: ${github.context.payload.action ?? 'Unknown'}`);
 
-  switch (eventName) {
-    case 'push':
-      return checkAndReleaseLibrary();
-    case 'pull_request':
-      return validateAndApproveReleasePR();
-    default:
-      throw new Error(`Unknown eventName: ${eventName}`);
-  }
+	switch (eventName) {
+		case 'push':
+			return checkAndReleaseLibrary();
+		case 'pull_request':
+			return validateAndApproveReleasePR();
+		default:
+			throw new Error(`Unknown eventName: ${eventName}`);
+	}
 };
 
 /**
@@ -42,7 +42,7 @@ const decideAndTriggerAction = () => {
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
  */
 const validateAndApproveReleasePR = () => {
-  console.log('validateAndApproveReleasePR');
+	console.log('validateAndApproveReleasePR');
 };
 
 /**
@@ -53,16 +53,20 @@ const validateAndApproveReleasePR = () => {
  * @throws Throws an error if any of the preflight checks or the release process fail
  */
 const checkAndReleaseLibrary = () => {
-  console.log('checkAndReleaseLibrary');
+	console.log('checkAndReleaseLibrary');
 };
 
-async function run(): Promise<void> {
-  try {
-    console.log('Running @guardian/release');
-    decideAndTriggerAction();
-  } catch (error) {
-    core.setFailed(error.message);
-  }
+function run(): void {
+	try {
+		console.log('Running @guardian/release');
+		decideAndTriggerAction();
+	} catch (error) {
+		if (error instanceof Error) {
+			core.setFailed(error.message);
+		} else {
+			throw error;
+		}
+	}
 }
 
 run();

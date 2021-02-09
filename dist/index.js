@@ -5807,15 +5807,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const github = __importStar(__nccwpck_require__(438));
@@ -5834,9 +5825,10 @@ const github = __importStar(__nccwpck_require__(438));
  * @throws Throws an error if the payload does not match any known conditions or if the underlying action throws an error
  */
 const decideAndTriggerAction = () => {
+    var _a;
     const eventName = github.context.eventName;
     console.log(`Event name: ${eventName}`);
-    console.log(`Action type: ${github.context.payload.action}`);
+    console.log(`Action type: ${(_a = github.context.payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
     switch (eventName) {
         case 'push':
             return checkAndReleaseLibrary();
@@ -5871,15 +5863,18 @@ const checkAndReleaseLibrary = () => {
     console.log('checkAndReleaseLibrary');
 };
 function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            console.log('Running @guardian/release');
-            decideAndTriggerAction();
-        }
-        catch (error) {
+    try {
+        console.log('Running @guardian/release');
+        decideAndTriggerAction();
+    }
+    catch (error) {
+        if (error instanceof Error) {
             core.setFailed(error.message);
         }
-    });
+        else {
+            throw error;
+        }
+    }
 }
 run();
 
