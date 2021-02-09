@@ -3,7 +3,7 @@ import * as github from '@actions/github';
 import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
 
 const config = {
-	pullRequestAuthor: 'guardian-ci',
+	pullRequestAuthor: 'jamie-lynch', // 'guardian-ci',
 	pullRequestPrefix: 'chore(release):',
 	maxFilesChanged: 2,
 	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],

@@ -5820,7 +5820,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const github = __importStar(__nccwpck_require__(438));
 const config = {
-    pullRequestAuthor: 'guardian-ci',
+    pullRequestAuthor: 'jamie-lynch',
     pullRequestPrefix: 'chore(release):',
     maxFilesChanged: 2,
     allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
