@@ -15,7 +15,20 @@ import * as github from '@actions/github';
  *
  * @throws Throws an error if the payload does not match any known conditions or if the underlying action throws an error
  */
-const decideAndTriggerAction = () => {};
+const decideAndTriggerAction = () => {
+  const eventName = github.context.eventName;
+  console.log(`Event name: ${eventName}`);
+  console.log(`Action type: ${github.context.payload.action}`);
+
+  switch (eventName) {
+    case 'push':
+      return checkAndReleaseLibrary();
+    case 'pull_request':
+      return validateAndApproveReleasePR();
+    default:
+      throw new Error(`Unknown eventName: ${eventName}`);
+  }
+};
 
 /**
  * Check if a PR meets the criteria for auto approval and, if it does, aprove it
@@ -28,7 +41,9 @@ const decideAndTriggerAction = () => {};
  *
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
  */
-const validateAndApproveReleasePR = () => {};
+const validateAndApproveReleasePR = () => {
+  console.log('validateAndApproveReleasePR');
+};
 
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
@@ -37,12 +52,14 @@ const validateAndApproveReleasePR = () => {};
  *
  * @throws Throws an error if any of the preflight checks or the release process fail
  */
-const checkAndReleaseLibrary = () => {};
+const checkAndReleaseLibrary = () => {
+  console.log('checkAndReleaseLibrary');
+};
 
 async function run(): Promise<void> {
   try {
     console.log('Running @guardian/release');
-    console.log(`Action type: ${github.context.payload.action}`);
+    decideAndTriggerAction();
   } catch (error) {
     core.setFailed(error.message);
   }
