@@ -5807,6 +5807,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const github = __importStar(__nccwpck_require__(438));
@@ -5814,6 +5823,7 @@ const config = {
     pullRequestAuthor: 'guardian-ci',
     pullRequestPrefix: 'chore(release):',
     maxFilesChanged: 2,
+    allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
 };
 /**
  * Decide what to do depending on the payload received
@@ -5860,7 +5870,7 @@ const decideAndTriggerAction = () => {
  *
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
  */
-const validateAndApproveReleasePR = (payload) => {
+const validateAndApproveReleasePR = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('validateAndApproveReleasePR');
     console.log(`Pull request: ${payload.pull_request.number}`);
     if (payload.pull_request.user.login !== config.pullRequestAuthor) {
@@ -5874,7 +5884,19 @@ const validateAndApproveReleasePR = (payload) => {
     if (payload.pull_request.changed_files > config.maxFilesChanged) {
         throw new Error(`Pull request changes more than ${config.maxFilesChanged} files.`);
     }
-};
+    const token = core.getInput('github-token');
+    const octokit = github.getOctokit(token);
+    const { data: files } = yield octokit.pulls.listFiles({
+        owner: payload.repository.owner.login,
+        repo: payload.repository.name,
+        pull_number: payload.pull_request.number,
+    });
+    for (const file of files) {
+        if (!config.allowedFiles.includes(file.filename)) {
+            throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${config.allowedFiles.join(', ')}`);
+        }
+    }
+});
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
  *
@@ -5886,20 +5908,22 @@ const checkAndReleaseLibrary = () => {
     console.log('checkAndReleaseLibrary');
 };
 function run() {
-    try {
-        console.log('Running @guardian/release');
-        decideAndTriggerAction();
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            core.setFailed(error.message);
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('Running @guardian/release');
+            yield decideAndTriggerAction();
         }
-        else {
-            throw error;
+        catch (error) {
+            if (error instanceof Error) {
+                core.setFailed(error.message);
+            }
+            else {
+                throw error;
+            }
         }
-    }
+    });
 }
-run();
+void run();
 
 
 /***/ }),

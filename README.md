@@ -24,6 +24,7 @@ tbd
 -   Use @actions/core to do logging
 -   Take items from config object as optional inputs
 -   Provide option for the release branch?
+-   Account for files not being in the root directory
 -   Cater for other libraries (maven, etc.)
 -   Upload artefacts
 -   Run the build automagically

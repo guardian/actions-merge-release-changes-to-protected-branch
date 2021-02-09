@@ -6,6 +6,7 @@ const config = {
 	pullRequestAuthor: 'guardian-ci',
 	pullRequestPrefix: 'chore(release):',
 	maxFilesChanged: 2,
+	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
 };
 
 /**
@@ -54,7 +55,7 @@ const decideAndTriggerAction = () => {
  *
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
  */
-const validateAndApproveReleasePR = (payload: PullRequestEvent) => {
+const validateAndApproveReleasePR = async (payload: PullRequestEvent) => {
 	console.log('validateAndApproveReleasePR');
 	console.log(`Pull request: ${payload.pull_request.number}`);
 
@@ -77,6 +78,27 @@ const validateAndApproveReleasePR = (payload: PullRequestEvent) => {
 			`Pull request changes more than ${config.maxFilesChanged} files.`,
 		);
 	}
+
+	const token = core.getInput('github-token');
+	const octokit = github.getOctokit(token);
+
+	const { data: files } = await octokit.pulls.listFiles({
+		owner: payload.repository.owner.login,
+		repo: payload.repository.name,
+		pull_number: payload.pull_request.number,
+	});
+
+	for (const file of files) {
+		if (!config.allowedFiles.includes(file.filename)) {
+			throw new Error(
+				`Unallowed file (${
+					file.filename
+				}) changed. Allowed files are: ${config.allowedFiles.join(
+					', ',
+				)}`,
+			);
+		}
+	}
 };
 
 /**
@@ -90,10 +112,10 @@ const checkAndReleaseLibrary = () => {
 	console.log('checkAndReleaseLibrary');
 };
 
-function run(): void {
+async function run(): Promise<void> {
 	try {
 		console.log('Running @guardian/release');
-		decideAndTriggerAction();
+		await decideAndTriggerAction();
 	} catch (error) {
 		if (error instanceof Error) {
 			core.setFailed(error.message);
@@ -103,4 +125,4 @@ function run(): void {
 	}
 }
 
-run();
+void run();

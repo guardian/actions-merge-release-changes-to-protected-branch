@@ -3,6 +3,10 @@ description: 'Run the CD process for Guardian repositories that define publishab
 runs:
   using: 'node12'
   main: 'dist/index.js'
+inputs:
+  github-token:
+    required: true
+    description: A GitHub token
 branding:
   icon: 'package'
   color: 'gray-dark'
