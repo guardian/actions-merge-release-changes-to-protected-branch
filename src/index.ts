@@ -1,5 +1,5 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
+import core from '@actions/core';
+import github from '@actions/github';
 
 /**
  * Decide what to do depending on the payload received
@@ -15,7 +15,7 @@ const github = require('@actions/github');
  *
  * @throws Throws an error if the payload does not match any known conditions or if the underlying action throws an error
  */
-const decideAndTriggerAction = (payload) => {};
+const decideAndTriggerAction = () => {};
 
 /**
  * Check if a PR meets the criteria for auto approval and, if it does, aprove it
@@ -28,7 +28,7 @@ const decideAndTriggerAction = (payload) => {};
  *
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
  */
-const validateAndApproveReleasePR = (payload) => {};
+const validateAndApproveReleasePR = () => {};
 
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
@@ -37,11 +37,11 @@ const validateAndApproveReleasePR = (payload) => {};
  *
  * @throws Throws an error if any of the preflight checks or the release process fail
  */
-const checkAndReleaseLibrary = (payload) => {};
+const checkAndReleaseLibrary = () => {};
 
 try {
   console.log('Running @guardian/release');
-  decideAndTriggerAction(github.context.payload);
+  console.log(`Action type: ${github.context.payload.action}`);
 } catch (error) {
   core.setFailed(error.message);
 }

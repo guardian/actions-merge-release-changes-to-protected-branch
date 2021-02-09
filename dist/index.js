@@ -2,7 +2,7 @@ module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 241:
+/***/ 351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -110,7 +110,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const command_1 = __nccwpck_require__(241);
+const command_1 = __nccwpck_require__(351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(278);
 const os = __importStar(__nccwpck_require__(87));
@@ -5783,12 +5783,17 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 351:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 144:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-const core = __nccwpck_require__(186);
-const github = __nccwpck_require__(438);
+"use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __importDefault(__nccwpck_require__(186));
+const github_1 = __importDefault(__nccwpck_require__(438));
 /**
  * Decide what to do depending on the payload received
  *
@@ -5803,8 +5808,7 @@ const github = __nccwpck_require__(438);
  *
  * @throws Throws an error if the payload does not match any known conditions or if the underlying action throws an error
  */
-const decideAndTriggerAction = (payload) => {};
-
+const decideAndTriggerAction = () => { };
 /**
  * Check if a PR meets the criteria for auto approval and, if it does, aprove it
  *
@@ -5816,8 +5820,7 @@ const decideAndTriggerAction = (payload) => {};
  *
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
  */
-const validateAndApproveReleasePR = (payload) => {};
-
+const validateAndApproveReleasePR = () => { };
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
  *
@@ -5825,13 +5828,13 @@ const validateAndApproveReleasePR = (payload) => {};
  *
  * @throws Throws an error if any of the preflight checks or the release process fail
  */
-const checkAndReleaseLibrary = (payload) => {};
-
+const checkAndReleaseLibrary = () => { };
 try {
-  console.log('Running @guardian/release');
-  decideAndTriggerAction(github.context.payload);
-} catch (error) {
-  core.setFailed(error.message);
+    console.log('Running @guardian/release');
+    console.log(`Action type: ${github_1.default.context.payload.action}`);
+}
+catch (error) {
+    core_1.default.setFailed(error.message);
 }
 
 
@@ -5987,6 +5990,6 @@ module.exports = require("zlib");;
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __nccwpck_require__(351);
+/******/ 	return __nccwpck_require__(144);
 /******/ })()
 ;
