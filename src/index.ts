@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
 
 /**
  * Decide what to do depending on the payload received
@@ -17,14 +18,15 @@ import * as github from '@actions/github';
  */
 const decideAndTriggerAction = () => {
 	const eventName = github.context.eventName;
+	const payload = github.context.payload;
 	console.log(`Event name: ${eventName}`);
-	console.log(`Action type: ${github.context.payload.action ?? 'Unknown'}`);
+	console.log(`Action type: ${payload.action ?? 'Unknown'}`);
 
 	switch (eventName) {
 		case 'push':
 			return checkAndReleaseLibrary();
 		case 'pull_request':
-			return validateAndApproveReleasePR();
+			return validateAndApproveReleasePR(payload as PullRequestEvent);
 		default:
 			throw new Error(`Unknown eventName: ${eventName}`);
 	}
@@ -41,8 +43,9 @@ const decideAndTriggerAction = () => {
  *
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
  */
-const validateAndApproveReleasePR = () => {
+const validateAndApproveReleasePR = (payload: PullRequestEvent) => {
 	console.log('validateAndApproveReleasePR');
+	console.log(`Pull request: ${payload.pull_request.number}`);
 };
 
 /**

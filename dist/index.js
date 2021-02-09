@@ -5827,13 +5827,14 @@ const github = __importStar(__nccwpck_require__(438));
 const decideAndTriggerAction = () => {
     var _a;
     const eventName = github.context.eventName;
+    const payload = github.context.payload;
     console.log(`Event name: ${eventName}`);
-    console.log(`Action type: ${(_a = github.context.payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
+    console.log(`Action type: ${(_a = payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
     switch (eventName) {
         case 'push':
             return checkAndReleaseLibrary();
         case 'pull_request':
-            return validateAndApproveReleasePR();
+            return validateAndApproveReleasePR(payload);
         default:
             throw new Error(`Unknown eventName: ${eventName}`);
     }
@@ -5849,8 +5850,9 @@ const decideAndTriggerAction = () => {
  *
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
  */
-const validateAndApproveReleasePR = () => {
+const validateAndApproveReleasePR = (payload) => {
     console.log('validateAndApproveReleasePR');
+    console.log(`Pull request: ${payload.pull_request.number}`);
 };
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
