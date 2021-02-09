@@ -16,11 +16,13 @@ tbd
 
 -   Should this be one command that figures out what to do based on the situation or multiple commands?
 
-## Road Map
+## TODOs
 
 -   ~Write in TS~
 -   ~Add linting and all the other fun things~
 -   ~Investigate using [@vercel/ncc](https://github.com/vercel/ncc) instead of checking in node_modules~
+-   Use @actions/core to do logging
+-   Take items from config object as optional inputs
 -   Provide option for the release branch?
 -   Cater for other libraries (maven, etc.)
 -   Upload artefacts

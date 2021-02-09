@@ -5810,6 +5810,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const github = __importStar(__nccwpck_require__(438));
+const config = {
+    pullRequestAuthor: 'guardian-ci',
+    pullRequestPrefix: 'chore(release):',
+    maxFilesChanged: 2,
+};
 /**
  * Decide what to do depending on the payload received
  *
@@ -5846,6 +5851,11 @@ const decideAndTriggerAction = () => {
  * If it wasn't then exit log the outcome and exit.
  * If it was then check that the PR only makes acceptable changes. Throw an error if not.
  *
+ * Checks:
+ * 1. Pull request is authored by ${config.pullRequestAuthor}
+ * 2. Pull request title starts with ${config.pullRequestPrefix}
+ * 3. Pull request doesn't change more than ${config.maxFilesChanged} files
+ *
  * @param object payload
  *
  * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
@@ -5853,6 +5863,17 @@ const decideAndTriggerAction = () => {
 const validateAndApproveReleasePR = (payload) => {
     console.log('validateAndApproveReleasePR');
     console.log(`Pull request: ${payload.pull_request.number}`);
+    if (payload.pull_request.user.login !== config.pullRequestAuthor) {
+        console.log(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
+        return;
+    }
+    if (!payload.pull_request.title.startsWith(config.pullRequestPrefix)) {
+        console.log(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
+        return;
+    }
+    if (payload.pull_request.changed_files > config.maxFilesChanged) {
+        throw new Error(`Pull request changes more than ${config.maxFilesChanged} files.`);
+    }
 };
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
