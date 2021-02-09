@@ -1,5 +1,5 @@
-import core from '@actions/core';
-import github from '@actions/github';
+import * as core from '@actions/core';
+import * as github from '@actions/github';
 
 /**
  * Decide what to do depending on the payload received
@@ -39,9 +39,13 @@ const validateAndApproveReleasePR = () => {};
  */
 const checkAndReleaseLibrary = () => {};
 
-try {
-  console.log('Running @guardian/release');
-  console.log(`Action type: ${github.context.payload.action}`);
-} catch (error) {
-  core.setFailed(error.message);
+async function run(): Promise<void> {
+  try {
+    console.log('Running @guardian/release');
+    console.log(`Action type: ${github.context.payload.action}`);
+  } catch (error) {
+    core.setFailed(error.message);
+  }
 }
+
+run();
