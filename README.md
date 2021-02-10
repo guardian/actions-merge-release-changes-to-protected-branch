@@ -22,7 +22,7 @@ tbd
 -   ~Add linting and all the other fun things~
 -   ~Investigate using [@vercel/ncc](https://github.com/vercel/ncc) instead of checking in node_modules~
 -   Check that the only change made in files is a version bump
--   Approve the PR
+-   ~Approve the PR~
 -   Investigate implementing the release process part
 -   Use @actions/core to do logging
 -   Take items from config object as optional inputs

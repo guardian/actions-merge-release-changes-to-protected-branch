@@ -5896,6 +5896,13 @@ const validateAndApproveReleasePR = (payload) => __awaiter(void 0, void 0, void 
             throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${config.allowedFiles.join(', ')}`);
         }
     }
+    yield octokit.pulls.createReview({
+        owner: payload.repository.owner.login,
+        repo: payload.repository.name,
+        pull_number: payload.pull_request.number,
+        event: 'APPROVE',
+        body: 'Approved automatically by the @guardian/release-action',
+    });
 });
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json

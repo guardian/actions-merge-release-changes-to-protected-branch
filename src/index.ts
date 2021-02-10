@@ -99,6 +99,14 @@ const validateAndApproveReleasePR = async (payload: PullRequestEvent) => {
 			);
 		}
 	}
+
+	await octokit.pulls.createReview({
+		owner: payload.repository.owner.login,
+		repo: payload.repository.name,
+		pull_number: payload.pull_request.number,
+		event: 'APPROVE',
+		body: 'Approved automatically by the @guardian/release-action',
+	});
 };
 
 /**
