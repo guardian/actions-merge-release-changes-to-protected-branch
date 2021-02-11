@@ -1,6 +1,11 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
+import type { Endpoints } from '@octokit/types';
+import type {
+	CheckSuiteEvent,
+	PullRequestEvent,
+	PullRequestReviewEvent,
+} from '@octokit/webhooks-definitions/schema';
 
 const config = {
 	pullRequestAuthor: 'jamie-lynch', // 'guardian-ci',
@@ -9,6 +14,35 @@ const config = {
 	maxFileChanges: 2,
 	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
 	expectedChanges: ['-  "version": "', '+  "version": "'],
+};
+
+type PullRequest = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data'];
+
+interface PullRequestQueryData {
+	owner: string;
+	repo: string;
+	pull_number: number;
+}
+
+const isAutoBumpPR = (pullRequest: PullRequest): boolean => {
+	if (
+		!pullRequest.user ||
+		pullRequest.user.login !== config.pullRequestAuthor
+	) {
+		console.log(
+			`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`,
+		);
+		return false;
+	}
+
+	if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
+		console.log(
+			`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`,
+		);
+		return false;
+	}
+
+	return true;
 };
 
 /**
@@ -36,6 +70,12 @@ const decideAndTriggerAction = () => {
 			return checkAndReleaseLibrary();
 		case 'pull_request':
 			return validateAndApproveReleasePR(payload as PullRequestEvent);
+		case 'check_suite':
+		case 'pull_request_review':
+			return validateAndMergePRs(
+				payload as PullRequestReviewEvent | CheckSuiteEvent,
+				github.context.eventName,
+			);
 		default:
 			throw new Error(`Unknown eventName: ${eventName}`);
 	}
@@ -74,22 +114,7 @@ const validateAndApproveReleasePR = async (payload: PullRequestEvent) => {
 	// Get PR from the API to be sure
 	const { data: pullRequest } = await octokit.pulls.get(prData);
 
-	if (
-		!pullRequest.user ||
-		pullRequest.user.login !== config.pullRequestAuthor
-	) {
-		console.log(
-			`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`,
-		);
-		return;
-	}
-
-	if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
-		console.log(
-			`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`,
-		);
-		return;
-	}
+	if (!isAutoBumpPR(pullRequest)) return;
 
 	if (pullRequest.changed_files > config.maxFilesChanged) {
 		throw new Error(
@@ -131,6 +156,79 @@ const validateAndApproveReleasePR = async (payload: PullRequestEvent) => {
 		...prData,
 		event: 'APPROVE',
 		body: 'Approved automatically by the @guardian/release-action',
+	});
+};
+
+/**
+ * Handle the different payloads depending on event and call the validateAndMergePR
+ * function accordingly
+ *
+ * @param object payload
+ * @param string eventType
+ */
+const validateAndMergePRs = async (
+	payload: PullRequestReviewEvent | CheckSuiteEvent,
+	eventType: string,
+) => {
+	const repoData = {
+		owner: payload.repository.owner.login,
+		repo: payload.repository.name,
+	};
+
+	if (eventType === 'pull_request_review') {
+		const p = payload as PullRequestReviewEvent;
+		if (p.action !== 'submitted' || p.review.state !== 'approved') {
+			console.log('Review was not approval submission, ignoring');
+			return;
+		}
+
+		await validateAndMergePR({
+			...repoData,
+			pull_number: p.pull_request.number,
+		});
+	} else if (eventType === 'check_suite') {
+		const p = payload as CheckSuiteEvent;
+		if (p.action !== 'completed' || p.check_suite.status !== 'completed') {
+			console.log(`Check suite not completed successfully, ignoring`);
+			return;
+		}
+
+		for await (const pr of p.check_suite.pull_requests) {
+			await validateAndMergePR({ ...repoData, pull_number: pr.number });
+		}
+	}
+};
+
+/**
+ * Check if a PR meets the criteria for auto merge and, if it does, merge it
+ *
+ * Checks:
+ * 1. Check if a PR is an automatically opened version bump PR
+ * 2. Check if the PR is mergeable
+ *
+ * @param object payload
+ */
+const validateAndMergePR = async (
+	pullRequestQueryData: PullRequestQueryData,
+) => {
+	console.log(`Pull request: ${pullRequestQueryData.pull_number}`);
+	const token = core.getInput('github-token');
+	const octokit = github.getOctokit(token);
+
+	const { data: pullRequest } = await octokit.pulls.get({
+		...pullRequestQueryData,
+	});
+
+	if (!isAutoBumpPR(pullRequest)) return;
+
+	if (!pullRequest.mergeable) {
+		console.log(`Pull request is not mergeable, exiting.`);
+		return;
+	}
+
+	await octokit.pulls.merge({
+		...pullRequestQueryData,
+		pull_number: pullRequest.number,
 	});
 };
 
