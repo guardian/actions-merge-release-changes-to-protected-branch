@@ -61,34 +61,43 @@ const validateAndApproveReleasePR = async (payload: PullRequestEvent) => {
 	console.log('validateAndApproveReleasePR');
 	console.log(`Pull request: ${payload.pull_request.number}`);
 
-	if (payload.pull_request.user.login !== config.pullRequestAuthor) {
+	const prData = {
+		owner: payload.repository.owner.login,
+		repo: payload.repository.name,
+		pull_number: payload.pull_request.number,
+	};
+
+	const token = core.getInput('github-token');
+	const octokit = github.getOctokit(token);
+
+	// PR information isn't necessarily up to date in webhook payload
+	// Get PR from the API to be sure
+	const { data: pullRequest } = await octokit.pulls.get(prData);
+
+	if (
+		!pullRequest.user ||
+		pullRequest.user.login !== config.pullRequestAuthor
+	) {
 		console.log(
 			`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`,
 		);
 		return;
 	}
 
-	if (!payload.pull_request.title.startsWith(config.pullRequestPrefix)) {
+	if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
 		console.log(
 			`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`,
 		);
 		return;
 	}
 
-	if (payload.pull_request.changed_files > config.maxFilesChanged) {
+	if (pullRequest.changed_files > config.maxFilesChanged) {
 		throw new Error(
 			`Pull request changes more than ${config.maxFilesChanged} files.`,
 		);
 	}
 
-	const token = core.getInput('github-token');
-	const octokit = github.getOctokit(token);
-
-	const { data: files } = await octokit.pulls.listFiles({
-		owner: payload.repository.owner.login,
-		repo: payload.repository.name,
-		pull_number: payload.pull_request.number,
-	});
+	const { data: files } = await octokit.pulls.listFiles(prData);
 
 	for (const file of files) {
 		if (!config.allowedFiles.includes(file.filename)) {
@@ -119,9 +128,7 @@ const validateAndApproveReleasePR = async (payload: PullRequestEvent) => {
 	}
 
 	await octokit.pulls.createReview({
-		owner: payload.repository.owner.login,
-		repo: payload.repository.name,
-		pull_number: payload.pull_request.number,
+		...prData,
 		event: 'APPROVE',
 		body: 'Approved automatically by the @guardian/release-action',
 	});

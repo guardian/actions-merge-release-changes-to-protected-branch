@@ -5875,24 +5875,27 @@ const decideAndTriggerAction = () => {
 const validateAndApproveReleasePR = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('validateAndApproveReleasePR');
     console.log(`Pull request: ${payload.pull_request.number}`);
-    if (payload.pull_request.user.login !== config.pullRequestAuthor) {
-        console.log(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
-        return;
-    }
-    if (!payload.pull_request.title.startsWith(config.pullRequestPrefix)) {
-        console.log(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
-        return;
-    }
-    if (payload.pull_request.changed_files > config.maxFilesChanged) {
-        throw new Error(`Pull request changes more than ${config.maxFilesChanged} files.`);
-    }
-    const token = core.getInput('github-token');
-    const octokit = github.getOctokit(token);
-    const { data: files } = yield octokit.pulls.listFiles({
+    const prData = {
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
         pull_number: payload.pull_request.number,
-    });
+    };
+    const token = core.getInput('github-token');
+    const octokit = github.getOctokit(token);
+    const { data: pullRequest } = yield octokit.pulls.get(prData);
+    if (!pullRequest.user ||
+        pullRequest.user.login !== config.pullRequestAuthor) {
+        console.log(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
+        return;
+    }
+    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
+        console.log(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
+        return;
+    }
+    if (pullRequest.changed_files > config.maxFilesChanged) {
+        throw new Error(`Pull request changes more than ${config.maxFilesChanged} files.`);
+    }
+    const { data: files } = yield octokit.pulls.listFiles(prData);
     for (const file of files) {
         if (!config.allowedFiles.includes(file.filename)) {
             throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${config.allowedFiles.join(', ')}`);
@@ -5908,13 +5911,7 @@ const validateAndApproveReleasePR = (payload) => __awaiter(void 0, void 0, void 
             }
         }
     }
-    yield octokit.pulls.createReview({
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        pull_number: payload.pull_request.number,
-        event: 'APPROVE',
-        body: 'Approved automatically by the @guardian/release-action',
-    });
+    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/release-action' }));
 });
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
