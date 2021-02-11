@@ -5832,7 +5832,7 @@ const config = {
     maxFilesChanged: 2,
     maxFileChanges: 2,
     allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
-    expectedChanges: ['-  "version": "', '+  "version": "'],
+    expectedChanges: ['-  "description": "', '+  "description": "'],
 };
 const isAutoBumpPR = (pullRequest) => {
     if (!pullRequest.user ||
