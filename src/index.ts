@@ -6,7 +6,9 @@ const config = {
 	pullRequestAuthor: 'jamie-lynch', // 'guardian-ci',
 	pullRequestPrefix: 'chore(release):',
 	maxFilesChanged: 2,
+	maxFileChanges: 2,
 	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
+	expectedChanges: ['-  "version": "', '+  "version": "'],
 };
 
 /**
@@ -97,6 +99,22 @@ const validateAndApproveReleasePR = async (payload: PullRequestEvent) => {
 					', ',
 				)}`,
 			);
+		}
+
+		if (file.changes > config.maxFileChanges) {
+			throw new Error(
+				`More than ${config.maxFileChanges} in file: ${file.filename}`,
+			);
+		}
+
+		if (file.patch) {
+			for (const change of config.expectedChanges) {
+				if (!file.patch.includes(change)) {
+					throw new Error(
+						`Expected to see the following string in diff for ${file.filename}: ${change}`,
+					);
+				}
+			}
 		}
 	}
 

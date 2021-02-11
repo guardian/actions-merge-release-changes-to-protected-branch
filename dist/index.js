@@ -5823,7 +5823,9 @@ const config = {
     pullRequestAuthor: 'jamie-lynch',
     pullRequestPrefix: 'chore(release):',
     maxFilesChanged: 2,
+    maxFileChanges: 2,
     allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
+    expectedChanges: ['-  "version": "', '+  "version": "'],
 };
 /**
  * Decide what to do depending on the payload received
@@ -5894,6 +5896,16 @@ const validateAndApproveReleasePR = (payload) => __awaiter(void 0, void 0, void 
     for (const file of files) {
         if (!config.allowedFiles.includes(file.filename)) {
             throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${config.allowedFiles.join(', ')}`);
+        }
+        if (file.changes > config.maxFileChanges) {
+            throw new Error(`More than ${config.maxFileChanges} in file: ${file.filename}`);
+        }
+        if (file.patch) {
+            for (const change of config.expectedChanges) {
+                if (!file.patch.includes(change)) {
+                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}`);
+                }
+            }
         }
     }
     yield octokit.pulls.createReview({
