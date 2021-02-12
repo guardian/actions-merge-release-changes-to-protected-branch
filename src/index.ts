@@ -260,7 +260,7 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 		},
 	};
 
-	await exec('git status', [], options);
+	await exec('git diff --quiet', [], options);
 
 	if (!output) {
 		console.log('New release not created. No further action needed.');
