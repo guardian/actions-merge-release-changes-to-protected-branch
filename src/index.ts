@@ -1,10 +1,12 @@
 import * as core from '@actions/core';
+import { exec } from '@actions/exec';
 import * as github from '@actions/github';
 import type { Endpoints } from '@octokit/types';
 import type {
 	CheckSuiteEvent,
 	PullRequestEvent,
 	PullRequestReviewEvent,
+	PushEvent,
 } from '@octokit/webhooks-definitions/schema';
 
 const config = {
@@ -14,6 +16,7 @@ const config = {
 	maxFileChanges: 2,
 	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
 	expectedChanges: ['-  "description": "', '+  "description": "'], // ['-  "version": "', '+  "version": "'],
+	releaseBranch: 'main',
 };
 
 type PullRequest = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data'];
@@ -67,7 +70,7 @@ const decideAndTriggerAction = () => {
 
 	switch (eventName) {
 		case 'push':
-			return checkAndReleaseLibrary();
+			return checkAndReleaseLibrary(payload as PushEvent);
 		case 'pull_request':
 			return validateAndApproveReleasePR(payload as PullRequestEvent);
 		case 'check_suite':
@@ -239,8 +242,15 @@ const validateAndMergePR = async (
  *
  * @throws Throws an error if any of the preflight checks or the release process fail
  */
-const checkAndReleaseLibrary = () => {
+const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	console.log('checkAndReleaseLibrary');
+
+	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
+		console.log(`Push is not to ${config.releaseBranch}, ignoring`);
+		return;
+	}
+
+	await exec('git diff --quiet');
 };
 
 async function run(): Promise<void> {
