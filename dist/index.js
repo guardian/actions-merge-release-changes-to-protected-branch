@@ -6991,7 +6991,7 @@ const config = {
     maxFileChanges: 2,
     allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
     expectedChanges: ['-  "description": "', '+  "description": "'],
-    releaseBranch: 'main',
+    releaseBranch: 'jl/test-push',
 };
 const isAutoBumpPR = (pullRequest) => {
     if (!pullRequest.user ||

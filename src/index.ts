@@ -16,7 +16,7 @@ const config = {
 	maxFileChanges: 2,
 	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
 	expectedChanges: ['-  "description": "', '+  "description": "'], // ['-  "version": "', '+  "version": "'],
-	releaseBranch: 'main',
+	releaseBranch: 'jl/test-push', // 'main
 };
 
 type PullRequest = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data'];
