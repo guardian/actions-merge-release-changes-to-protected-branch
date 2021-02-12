@@ -260,7 +260,7 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 		},
 	};
 
-	await exec('git diff', [], options);
+	await exec('git status', [], options);
 
 	console.log(output);
 };
