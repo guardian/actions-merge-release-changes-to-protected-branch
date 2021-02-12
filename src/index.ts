@@ -29,6 +29,10 @@ interface PullRequestQueryData {
 	pull_number: number;
 }
 
+interface Package {
+	version?: string;
+}
+
 const isAutoBumpPR = (pullRequest: PullRequest): boolean => {
 	if (
 		!pullRequest.user ||
@@ -275,9 +279,15 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	console.log('Diff detected. Opening pull request');
 
 	output = '';
-	await exec('jq -r .version < package.json', [], options);
+	await exec('cat package.json', [], options);
 
-	const newVersion = output;
+	const newVersion = ((JSON.parse(output) as unknown) as Package).version;
+
+	if (!newVersion) {
+		console.log('Could not find version number');
+		return;
+	}
+
 	console.log(`New version is ${newVersion}`);
 
 	const message = `${config.prTitlePrefix}${newVersion}`;
