@@ -262,7 +262,10 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 	await exec('git status', [], options);
 
-	console.log(output);
+	if (!output) {
+		console.log('New release not created. No further action needed.');
+		return;
+	}
 };
 
 async function run(): Promise<void> {

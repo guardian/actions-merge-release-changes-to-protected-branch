@@ -7175,7 +7175,10 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         },
     };
     yield exec_1.exec('git status', [], options);
-    console.log(output);
+    if (!output) {
+        console.log('New release not created. No further action needed.');
+        return;
+    }
 });
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
