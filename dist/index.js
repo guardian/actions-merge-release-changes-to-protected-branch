@@ -7181,10 +7181,10 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         },
     };
     yield exec_1.exec('git diff --quiet', [], options);
-    if (!output) {
-        console.log('New release not created. No further action needed.');
-        return;
-    }
+    // if (!output) {
+    // 	console.log('New release not created. No further action needed.');
+    // 	return;
+    // }
     console.log('Diff detected. Opening pull request');
     output = '';
     yield exec_1.exec("jq -r '.version' < package.json", [], options);

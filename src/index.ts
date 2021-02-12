@@ -267,10 +267,10 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 	await exec('git diff --quiet', [], options);
 
-	if (!output) {
-		console.log('New release not created. No further action needed.');
-		return;
-	}
+	// if (!output) {
+	// 	console.log('New release not created. No further action needed.');
+	// 	return;
+	// }
 
 	console.log('Diff detected. Opening pull request');
 
