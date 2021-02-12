@@ -250,7 +250,19 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 		return;
 	}
 
-	await exec('git diff --quiet');
+	let output = '';
+
+	const options = {
+		listeners: {
+			stdout: (data: Buffer) => {
+				output += data.toString();
+			},
+		},
+	};
+
+	await exec('git diff --quiet', [], options);
+
+	console.log(output);
 };
 
 async function run(): Promise<void> {

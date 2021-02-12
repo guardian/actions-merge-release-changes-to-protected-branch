@@ -7166,7 +7166,16 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         console.log(`Push is not to ${config.releaseBranch}, ignoring`);
         return;
     }
-    yield exec_1.exec('git diff --quiet');
+    let output = '';
+    const options = {
+        listeners: {
+            stdout: (data) => {
+                output += data.toString();
+            },
+        },
+    };
+    yield exec_1.exec('git diff --quiet', [], options);
+    console.log(output);
 });
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
