@@ -226,12 +226,10 @@ const validateAndMergePR = async (
 		return;
 	}
 
-	console.log('Everything is good. Merging PR');
-
-	// await octokit.pulls.merge({
-	// 	...pullRequestQueryData,
-	// 	pull_number: pullRequest.number,
-	// });
+	await octokit.pulls.merge({
+		...pullRequestQueryData,
+		pull_number: pullRequest.number,
+	});
 };
 
 /**

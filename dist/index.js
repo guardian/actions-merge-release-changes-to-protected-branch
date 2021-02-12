@@ -5992,11 +5992,7 @@ const validateAndMergePR = (pullRequestQueryData) => __awaiter(void 0, void 0, v
         console.log(`Pull request is not mergeable, exiting.`);
         return;
     }
-    console.log('Everything is good. Merging PR');
-    // await octokit.pulls.merge({
-    // 	...pullRequestQueryData,
-    // 	pull_number: pullRequest.number,
-    // });
+    yield octokit.pulls.merge(Object.assign(Object.assign({}, pullRequestQueryData), { pull_number: pullRequest.number }));
 });
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
