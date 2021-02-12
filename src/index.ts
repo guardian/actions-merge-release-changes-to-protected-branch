@@ -275,7 +275,7 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	console.log('Diff detected. Opening pull request');
 
 	output = '';
-	await exec("jq -r '.version' < package.json", [], options);
+	await exec('jq -r .version < package.json', [], options);
 
 	const newVersion = output;
 	console.log(`New version is ${newVersion}`);

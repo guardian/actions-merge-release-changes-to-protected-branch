@@ -7187,7 +7187,7 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
     // }
     console.log('Diff detected. Opening pull request');
     output = '';
-    yield exec_1.exec("jq -r '.version' < package.json", [], options);
+    yield exec_1.exec('jq -r .version < package.json', [], options);
     const newVersion = output;
     console.log(`New version is ${newVersion}`);
     const message = `${config.prTitlePrefix}${newVersion}`;
