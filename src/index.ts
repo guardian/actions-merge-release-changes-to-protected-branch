@@ -17,6 +17,8 @@ const config = {
 	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
 	expectedChanges: ['-  "description": "', '+  "description": "'], // ['-  "version": "', '+  "version": "'],
 	releaseBranch: 'jl/test-push', // 'main
+	prTitlePrefix: 'chore(release): ',
+	newBranchPrefix: 'release-',
 };
 
 type PullRequest = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data'];
@@ -238,6 +240,10 @@ const validateAndMergePR = async (
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
  *
+ * Checks:
+ * 1. The branch ${config.releaseBranch}
+ * 2. There is a diff
+ *
  * @param object payload
  *
  * @throws Throws an error if any of the preflight checks or the release process fail
@@ -251,7 +257,6 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	}
 
 	let output = '';
-
 	const options = {
 		listeners: {
 			stdout: (data: Buffer) => {
@@ -266,6 +271,20 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 		console.log('New release not created. No further action needed.');
 		return;
 	}
+
+	console.log('Diff detected. Opening pull request');
+
+	output = '';
+	await exec("jq -r '.version' < package.json", [], options);
+
+	const newVersion = output;
+	console.log(`New version is ${newVersion}`);
+
+	const message = `${config.prTitlePrefix}${newVersion}`;
+	const newBranch = `${config.newBranchPrefix}${newVersion}`;
+
+	console.log(`Message: ${message}`);
+	console.log(`New Branch: ${newBranch}`);
 };
 
 async function run(): Promise<void> {

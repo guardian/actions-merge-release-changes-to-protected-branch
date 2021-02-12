@@ -6992,6 +6992,8 @@ const config = {
     allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
     expectedChanges: ['-  "description": "', '+  "description": "'],
     releaseBranch: 'jl/test-push',
+    prTitlePrefix: 'chore(release): ',
+    newBranchPrefix: 'release-',
 };
 const isAutoBumpPR = (pullRequest) => {
     if (!pullRequest.user ||
@@ -7156,6 +7158,10 @@ const validateAndMergePR = (pullRequestQueryData) => __awaiter(void 0, void 0, v
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
  *
+ * Checks:
+ * 1. The branch ${config.releaseBranch}
+ * 2. There is a diff
+ *
  * @param object payload
  *
  * @throws Throws an error if any of the preflight checks or the release process fail
@@ -7179,6 +7185,15 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         console.log('New release not created. No further action needed.');
         return;
     }
+    console.log('Diff detected. Opening pull request');
+    output = '';
+    yield exec_1.exec("jq -r '.version' < package.json", [], options);
+    const newVersion = output;
+    console.log(`New version is ${newVersion}`);
+    const message = `${config.prTitlePrefix}${newVersion}`;
+    const newBranch = `${config.newBranchPrefix}${newVersion}`;
+    console.log(`Message: ${message}`);
+    console.log(`New Branch: ${newBranch}`);
 });
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
