@@ -288,13 +288,16 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 		return;
 	}
 
-	console.log(`New version is ${newVersion}`);
-
 	const message = `${config.prTitlePrefix}${newVersion}`;
 	const newBranch = `${config.newBranchPrefix}${newVersion}`;
 
-	console.log(`Message: ${message}`);
-	console.log(`New Branch: ${newBranch}`);
+	await exec(`git checkout -b ${newBranch}`);
+	await exec(`touch test.md`);
+	await exec(`git add test.md`);
+	// await exec(`git add package.json`);
+	// await exec(`git add package-lock.json`);
+	await exec(`git commit -m ${message}`);
+	await exec(`git status`);
 };
 
 async function run(): Promise<void> {
