@@ -7209,6 +7209,15 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
     yield exec_1.exec(`git commit -m "${message}"`);
     yield exec_1.exec(`git status`);
     yield exec_1.exec(`git push -u origin "${newBranch}"`);
+    const octokit = github.getOctokit(token);
+    yield octokit.pulls.create({
+        owner: payload.repository.owner.login,
+        repo: payload.repository.name,
+        title: message,
+        body: `Updating the version number in the repository following the release of v${newVersion}`,
+        base: config.releaseBranch,
+        head: newBranch,
+    });
 });
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
