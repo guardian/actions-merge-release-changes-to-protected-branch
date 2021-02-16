@@ -256,6 +256,7 @@ const validateAndMergePR = async (
  */
 const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	console.log('checkAndReleaseLibrary');
+	const token = core.getInput('test-token');
 
 	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
 		console.log(`Push is not to ${config.releaseBranch}, ignoring`);
@@ -295,6 +296,10 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 	await exec(`git config --global user.email "${config.commitEmail}"`);
 	await exec(`git config --global user.name "${config.commitUser}"`);
+
+	console.log(
+		`Remote: https://git:${token}@github.com/${payload.repository.full_name}.git`,
+	);
 
 	await exec(`git checkout -b "${newBranch}"`);
 	await exec(`touch test.md`);
