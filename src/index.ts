@@ -256,7 +256,7 @@ const validateAndMergePR = async (
  */
 const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	console.log('checkAndReleaseLibrary');
-	const token = core.getInput('test-token');
+	const token = core.getInput('github-token');
 
 	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
 		console.log(`Push is not to ${config.releaseBranch}, ignoring`);
@@ -296,9 +296,8 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 	await exec(`git config --global user.email "${config.commitEmail}"`);
 	await exec(`git config --global user.name "${config.commitUser}"`);
-
-	console.log(
-		`Remote: https://git:${token}@github.com/${payload.repository.full_name}.git`,
+	await exec(
+		`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`,
 	);
 
 	await exec(`git checkout -b "${newBranch}"`);
@@ -308,6 +307,7 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	// await exec(`git add package-lock.json`);
 	await exec(`git commit -m "${message}"`);
 	await exec(`git status`);
+	await exec(`git push -u origin "${newBranch}"`);
 };
 
 async function run(): Promise<void> {

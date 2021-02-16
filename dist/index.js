@@ -7170,7 +7170,7 @@ const validateAndMergePR = (pullRequestQueryData) => __awaiter(void 0, void 0, v
  */
 const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('checkAndReleaseLibrary');
-    const token = core.getInput('test-token');
+    const token = core.getInput('github-token');
     if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
         console.log(`Push is not to ${config.releaseBranch}, ignoring`);
         return;
@@ -7200,7 +7200,7 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
     const newBranch = `${config.newBranchPrefix}${newVersion}`;
     yield exec_1.exec(`git config --global user.email "${config.commitEmail}"`);
     yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
-    console.log(`Remote: https://git:${token}@github.com/${payload.repository.full_name}.git`);
+    yield exec_1.exec(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
     yield exec_1.exec(`git checkout -b "${newBranch}"`);
     yield exec_1.exec(`touch test.md`);
     yield exec_1.exec(`git add test.md`);
@@ -7208,6 +7208,7 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
     // await exec(`git add package-lock.json`);
     yield exec_1.exec(`git commit -m "${message}"`);
     yield exec_1.exec(`git status`);
+    yield exec_1.exec(`git push -u origin "${newBranch}"`);
 });
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
