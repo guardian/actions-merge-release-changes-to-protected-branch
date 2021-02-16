@@ -19,6 +19,8 @@ const config = {
 	releaseBranch: 'jl/test-push', // 'main
 	prTitlePrefix: 'chore(release): ',
 	newBranchPrefix: 'release-',
+	commitUser: 'guardian-ci',
+	commitEmail: 'guardian-ci@users.noreply.github.com',
 };
 
 type PullRequest = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data'];
@@ -290,6 +292,9 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 	const message = `${config.prTitlePrefix}${newVersion}`;
 	const newBranch = `${config.newBranchPrefix}${newVersion}`;
+
+	await exec(`git config --global user.email "${config.commitEmail}"`);
+	await exec(`git config --global user.name "${config.commitUser}"`);
 
 	await exec(`git checkout -b "${newBranch}"`);
 	await exec(`touch test.md`);

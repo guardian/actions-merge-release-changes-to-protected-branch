@@ -6994,6 +6994,8 @@ const config = {
     releaseBranch: 'jl/test-push',
     prTitlePrefix: 'chore(release): ',
     newBranchPrefix: 'release-',
+    commitUser: 'guardian-ci',
+    commitEmail: 'guardian-ci@users.noreply.github.com',
 };
 const isAutoBumpPR = (pullRequest) => {
     if (!pullRequest.user ||
@@ -7195,6 +7197,8 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
     }
     const message = `${config.prTitlePrefix}${newVersion}`;
     const newBranch = `${config.newBranchPrefix}${newVersion}`;
+    yield exec_1.exec(`git config --global user.email "${config.commitEmail}"`);
+    yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
     yield exec_1.exec(`git checkout -b "${newBranch}"`);
     yield exec_1.exec(`touch test.md`);
     yield exec_1.exec(`git add test.md`);
