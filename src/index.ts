@@ -15,8 +15,8 @@ const config = {
 	maxFilesChanged: 2,
 	maxFileChanges: 2,
 	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
-	expectedChanges: ['-  "description": "', '+  "description": "'], // ['-  "version": "', '+  "version": "'],
-	releaseBranch: 'jl/test-push', // 'main
+	expectedChanges: ['-  "version": "', '+  "version": "'],
+	releaseBranch: 'main',
 	prTitlePrefix: 'chore(release): ',
 	newBranchPrefix: 'release-',
 	commitUser: 'guardian-ci',
@@ -274,10 +274,10 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 	await exec('git diff --quiet', [], options);
 
-	// if (!output) {
-	// 	console.log('New release not created. No further action needed.');
-	// 	return;
-	// }
+	if (!output) {
+		console.log('New release not created. No further action needed.');
+		return;
+	}
 
 	console.log('Diff detected. Opening pull request');
 
@@ -301,10 +301,8 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	);
 
 	await exec(`git checkout -b "${newBranch}"`);
-	await exec(`touch test.md`);
-	await exec(`git add test.md`);
-	// await exec(`git add package.json`);
-	// await exec(`git add package-lock.json`);
+	await exec(`git add package.json`);
+	await exec(`git add package-lock.json`);
 	await exec(`git commit -m "${message}"`);
 	await exec(`git status`);
 	await exec(`git push -u origin "${newBranch}"`);

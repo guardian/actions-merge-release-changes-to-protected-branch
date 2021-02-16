@@ -6990,8 +6990,8 @@ const config = {
     maxFilesChanged: 2,
     maxFileChanges: 2,
     allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
-    expectedChanges: ['-  "description": "', '+  "description": "'],
-    releaseBranch: 'jl/test-push',
+    expectedChanges: ['-  "version": "', '+  "version": "'],
+    releaseBranch: 'main',
     prTitlePrefix: 'chore(release): ',
     newBranchPrefix: 'release-',
     commitUser: 'guardian-ci',
@@ -7184,10 +7184,10 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         },
     };
     yield exec_1.exec('git diff --quiet', [], options);
-    // if (!output) {
-    // 	console.log('New release not created. No further action needed.');
-    // 	return;
-    // }
+    if (!output) {
+        console.log('New release not created. No further action needed.');
+        return;
+    }
     console.log('Diff detected. Opening pull request');
     output = '';
     yield exec_1.exec('cat package.json', [], options);
@@ -7202,10 +7202,8 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
     yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
     yield exec_1.exec(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
     yield exec_1.exec(`git checkout -b "${newBranch}"`);
-    yield exec_1.exec(`touch test.md`);
-    yield exec_1.exec(`git add test.md`);
-    // await exec(`git add package.json`);
-    // await exec(`git add package-lock.json`);
+    yield exec_1.exec(`git add package.json`);
+    yield exec_1.exec(`git add package-lock.json`);
     yield exec_1.exec(`git commit -m "${message}"`);
     yield exec_1.exec(`git status`);
     yield exec_1.exec(`git push -u origin "${newBranch}"`);
