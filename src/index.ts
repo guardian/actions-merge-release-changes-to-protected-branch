@@ -258,79 +258,64 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	console.log('checkAndReleaseLibrary');
 	const token = core.getInput('github-token');
 
-	// if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
-	// 	console.log(`Push is not to ${config.releaseBranch}, ignoring`);
-	// 	return;
-	// }
-
-	let output = '';
-	let error = '';
-	const options = {
-		listeners: {
-			stdout: (data: Buffer) => {
-				output += data.toString();
-			},
-			stderr: (data: Buffer) => {
-				error += data.toString();
-			},
-		},
-	};
-
-	// Write a new file to make a diff so that we can see what git diff does
-	await exec('touch test.md');
+	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
+		console.log(`Push is not to ${config.releaseBranch}, ignoring`);
+		return;
+	}
 
 	const ret = await exec('git diff --quiet', [], {
-		...options,
 		ignoreReturnCode: true,
 	});
 
-	console.log(ret);
-	console.log(output);
-	console.log(error);
-
-	if (!output) {
+	if (!ret) {
 		console.log('New release not created. No further action needed.');
 		return;
 	}
 
 	console.log('Diff detected. Opening pull request');
 
-	// output = '';
-	// await exec('cat package.json', [], options);
+	let output = '';
+	await exec('cat package.json', [], {
+		listeners: {
+			stdout: (data: Buffer) => {
+				output += data.toString();
+			},
+		},
+	});
 
-	// const newVersion = ((JSON.parse(output) as unknown) as Package).version;
+	const newVersion = ((JSON.parse(output) as unknown) as Package).version;
 
-	// if (!newVersion) {
-	// 	console.log('Could not find version number');
-	// 	return;
-	// }
+	if (!newVersion) {
+		console.log('Could not find version number');
+		return;
+	}
 
-	// const message = `${config.prTitlePrefix}${newVersion}`;
-	// const newBranch = `${config.newBranchPrefix}${newVersion}`;
+	const message = `${config.prTitlePrefix}${newVersion}`;
+	const newBranch = `${config.newBranchPrefix}${newVersion}`;
 
-	// await exec(`git config --global user.email "${config.commitEmail}"`);
-	// await exec(`git config --global user.name "${config.commitUser}"`);
-	// await exec(
-	// 	`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`,
-	// );
+	await exec(`git config --global user.email "${config.commitEmail}"`);
+	await exec(`git config --global user.name "${config.commitUser}"`);
+	await exec(
+		`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`,
+	);
 
-	// await exec(`git checkout -b "${newBranch}"`);
-	// await exec(`git add package.json`);
-	// await exec(`git add package-lock.json`);
-	// await exec(`git commit -m "${message}"`);
-	// await exec(`git status`);
-	// await exec(`git push -u origin "${newBranch}"`);
+	await exec(`git checkout -b "${newBranch}"`);
+	await exec(`git add package.json`);
+	await exec(`git add package-lock.json`);
+	await exec(`git commit -m "${message}"`);
+	await exec(`git status`);
+	await exec(`git push -u origin "${newBranch}"`);
 
-	// const octokit = github.getOctokit(token);
+	const octokit = github.getOctokit(token);
 
-	// await octokit.pulls.create({
-	// 	owner: payload.repository.owner.login,
-	// 	repo: payload.repository.name,
-	// 	title: message,
-	// 	body: `Updating the version number in the repository following the release of v${newVersion}`,
-	// 	base: config.releaseBranch,
-	// 	head: newBranch,
-	// });
+	await octokit.pulls.create({
+		owner: payload.repository.owner.login,
+		repo: payload.repository.name,
+		title: message,
+		body: `Updating the version number in the repository following the release of v${newVersion}`,
+		base: config.releaseBranch,
+		head: newBranch,
+	});
 };
 
 async function run(): Promise<void> {
