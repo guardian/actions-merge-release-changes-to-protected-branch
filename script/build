@@ -9,3 +9,10 @@ if [ $CI ] ; then
 fi
 
 npm run build
+
+if [ $CI ] ; then
+	if ! git diff --quiet; then
+		echo "Changes detected after running build. It looks like you may have forgetten to run and check in the new build."
+		exit 1
+	fi
+fi
