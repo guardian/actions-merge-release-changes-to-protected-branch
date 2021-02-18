@@ -7176,14 +7176,22 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         return;
     }
     let output = '';
+    let error = '';
     const options = {
         listeners: {
             stdout: (data) => {
                 output += data.toString();
             },
+            stderr: (data) => {
+                error += data.toString();
+            },
         },
     };
-    yield exec_1.exec('git diff --quiet', [], options);
+    // Write a new file to make a diff so that we can see what git diff does
+    yield exec_1.exec('touch test.md');
+    yield exec_1.exec('git diff --quiet', [], Object.assign(Object.assign({}, options), { ignoreReturnCode: true }));
+    console.log(output);
+    console.log(error);
     if (!output) {
         console.log('New release not created. No further action needed.');
         return;
