@@ -7197,33 +7197,35 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         return;
     }
     console.log('Diff detected. Opening pull request');
-    output = '';
-    yield exec_1.exec('cat package.json', [], options);
-    const newVersion = JSON.parse(output).version;
-    if (!newVersion) {
-        console.log('Could not find version number');
-        return;
-    }
-    const message = `${config.prTitlePrefix}${newVersion}`;
-    const newBranch = `${config.newBranchPrefix}${newVersion}`;
-    yield exec_1.exec(`git config --global user.email "${config.commitEmail}"`);
-    yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
-    yield exec_1.exec(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
-    yield exec_1.exec(`git checkout -b "${newBranch}"`);
-    yield exec_1.exec(`git add package.json`);
-    yield exec_1.exec(`git add package-lock.json`);
-    yield exec_1.exec(`git commit -m "${message}"`);
-    yield exec_1.exec(`git status`);
-    yield exec_1.exec(`git push -u origin "${newBranch}"`);
-    const octokit = github.getOctokit(token);
-    yield octokit.pulls.create({
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        title: message,
-        body: `Updating the version number in the repository following the release of v${newVersion}`,
-        base: config.releaseBranch,
-        head: newBranch,
-    });
+    // output = '';
+    // await exec('cat package.json', [], options);
+    // const newVersion = ((JSON.parse(output) as unknown) as Package).version;
+    // if (!newVersion) {
+    // 	console.log('Could not find version number');
+    // 	return;
+    // }
+    // const message = `${config.prTitlePrefix}${newVersion}`;
+    // const newBranch = `${config.newBranchPrefix}${newVersion}`;
+    // await exec(`git config --global user.email "${config.commitEmail}"`);
+    // await exec(`git config --global user.name "${config.commitUser}"`);
+    // await exec(
+    // 	`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`,
+    // );
+    // await exec(`git checkout -b "${newBranch}"`);
+    // await exec(`git add package.json`);
+    // await exec(`git add package-lock.json`);
+    // await exec(`git commit -m "${message}"`);
+    // await exec(`git status`);
+    // await exec(`git push -u origin "${newBranch}"`);
+    // const octokit = github.getOctokit(token);
+    // await octokit.pulls.create({
+    // 	owner: payload.repository.owner.login,
+    // 	repo: payload.repository.name,
+    // 	title: message,
+    // 	body: `Updating the version number in the repository following the release of v${newVersion}`,
+    // 	base: config.releaseBranch,
+    // 	head: newBranch,
+    // });
 });
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
