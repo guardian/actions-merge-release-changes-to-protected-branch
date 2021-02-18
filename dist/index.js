@@ -7189,7 +7189,8 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
     };
     // Write a new file to make a diff so that we can see what git diff does
     yield exec_1.exec('touch test.md');
-    yield exec_1.exec('git diff --quiet', [], Object.assign(Object.assign({}, options), { ignoreReturnCode: true }));
+    const ret = yield exec_1.exec('git diff --quiet', [], Object.assign(Object.assign({}, options), { ignoreReturnCode: true }));
+    console.log(ret);
     console.log(output);
     console.log(error);
     if (!output) {

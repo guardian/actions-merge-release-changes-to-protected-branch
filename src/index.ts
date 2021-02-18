@@ -279,8 +279,12 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	// Write a new file to make a diff so that we can see what git diff does
 	await exec('touch test.md');
 
-	await exec('git diff --quiet', [], { ...options, ignoreReturnCode: true });
+	const ret = await exec('git diff --quiet', [], {
+		...options,
+		ignoreReturnCode: true,
+	});
 
+	console.log(ret);
 	console.log(output);
 	console.log(error);
 
