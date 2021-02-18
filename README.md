@@ -12,13 +12,12 @@ When publishing a new release of a library to npm, the version number is changed
 
 ## How?
 
-There are three steps in the process, all handled by this action:
+There are two steps in the process, both handled by this action:
 
 1. If a merge to main results in a new publish, commit the changes to `package.json` and `package-lock.json` and open a new PR for them
-2. If a new PR is opened, check if it a version bump PR and, if it is, approve it
-3. If a version bump PR is ready to merge, merge it
+2. If a new PR is opened, check if it a version bump PR and, if it is, approve it and merge it
 
-In order to run these steps, three workflow files are required in your project.
+In order to run these steps, two workflow files are required in your project.
 
 **Open PR**
 
@@ -52,9 +51,9 @@ jobs:
                   github-token: ${{ secrets.CI_TOKEN_1 }}
 ```
 
-**Approve PR**
+**Approve and merge PR**
 
-The PR approve should be run on the `pull_request` event, for example:
+The PR approval and merge should be run on the `pull_request` event, for example:
 
 ```yaml
 name: Approve
@@ -70,7 +69,7 @@ jobs:
                   github-token: ${{ secrets.CI_TOKEN_2 }}
 ```
 
-You may also want to combine this with running CI checks, e.g.
+You probably want it to run after your other CI checks, e.g.
 
 ```yaml
 name: CI
@@ -89,34 +88,12 @@ jobs:
             - run: npm run test
     approve:
         runs-on: ubuntu-latest
+        needs: [ci]
         steps:
-            - name: Validate and approve release PRs
+            - name: Validate, approve and merge release PRs
               uses: guardian/release-action@main
               with:
                   github-token: ${{ secrets.CI_TOKEN_2 }}
-```
-
-**Merge PR**
-
-The automerge functionality should check if the PR can be merged after pull request reviews are submitted or check suites complete.
-
-```yaml
-name: Automerge
-on:
-    pull_request_review:
-        types:
-            - submitted
-    check_suite:
-        types:
-            - completed
-jobs:
-    automerge:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Validate and merge version bump PRs
-              uses: guardian/release-action@main
-              with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Tokens
