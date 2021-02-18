@@ -6973,13 +6973,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __asyncValues = (this && this.__asyncValues) || function (o) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const exec_1 = __nccwpck_require__(514);
@@ -6997,18 +6990,6 @@ const config = {
     commitUser: 'guardian-ci',
     commitEmail: 'guardian-ci@users.noreply.github.com',
 };
-const isAutoBumpPR = (pullRequest) => {
-    if (!pullRequest.user ||
-        pullRequest.user.login !== config.pullRequestAuthor) {
-        console.log(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
-        return false;
-    }
-    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
-        console.log(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
-        return false;
-    }
-    return true;
-};
 /**
  * Decide what to do depending on the payload received
  *
@@ -7018,6 +6999,7 @@ const isAutoBumpPR = (pullRequest) => {
  * For pull requests, check if the PR matches the pattern for a version bump.
  * If it does then validate the PR to make sure it meets the requirements and,
  * if it does, approve it
+ * Check that the PR is mergeable and, if it is, merge it
  *
  * @param object payload
  *
@@ -7033,32 +7015,13 @@ const decideAndTriggerAction = () => {
         case 'push':
             return checkAndReleaseLibrary(payload);
         case 'pull_request':
-            return validateAndApproveReleasePR(payload);
-        case 'check_suite':
-        case 'pull_request_review':
-            return validateAndMergePRs(payload, github.context.eventName);
+            return checkApproveAndMergePR(payload);
         default:
             throw new Error(`Unknown eventName: ${eventName}`);
     }
 };
-/**
- * Check if a PR meets the criteria for auto approval and, if it does, aprove it
- *
- * Firstly, check if the PR was generated automatically by the release process to bump the version number.
- * If it wasn't then exit log the outcome and exit.
- * If it was then check that the PR only makes acceptable changes. Throw an error if not.
- *
- * Checks:
- * 1. Pull request is authored by ${config.pullRequestAuthor}
- * 2. Pull request title starts with ${config.pullRequestPrefix}
- * 3. Pull request doesn't change more than ${config.maxFilesChanged} files
- *
- * @param object payload
- *
- * @throws Throws an error if the PR was flagged for auto approval but failed one of the checks
- */
-const validateAndApproveReleasePR = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('validateAndApproveReleasePR');
+const checkApproveAndMergePR = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('checkApproveAndMergePR');
     console.log(`Pull request: ${payload.pull_request.number}`);
     const prData = {
         owner: payload.repository.owner.login,
@@ -7070,8 +7033,16 @@ const validateAndApproveReleasePR = (payload) => __awaiter(void 0, void 0, void 
     // PR information isn't necessarily up to date in webhook payload
     // Get PR from the API to be sure
     const { data: pullRequest } = yield octokit.pulls.get(prData);
-    if (!isAutoBumpPR(pullRequest))
+    // Check and approve PR
+    if (!pullRequest.user ||
+        pullRequest.user.login !== config.pullRequestAuthor) {
+        console.log(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
         return;
+    }
+    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
+        console.log(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
+        return;
+    }
     if (pullRequest.changed_files > config.maxFilesChanged) {
         throw new Error(`Pull request changes more than ${config.maxFilesChanged} files.`);
     }
@@ -7092,70 +7063,11 @@ const validateAndApproveReleasePR = (payload) => __awaiter(void 0, void 0, void 
         }
     }
     yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/release-action' }));
-});
-/**
- * Handle the different payloads depending on event and call the validateAndMergePR
- * function accordingly
- *
- * @param object payload
- * @param string eventType
- */
-const validateAndMergePRs = (payload, eventType) => __awaiter(void 0, void 0, void 0, function* () {
-    var e_1, _a;
-    const repoData = {
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-    };
-    if (eventType === 'pull_request_review') {
-        const p = payload;
-        if (p.action !== 'submitted' || p.review.state !== 'approved') {
-            console.log('Review was not approval submission, ignoring');
-            return;
-        }
-        yield validateAndMergePR(Object.assign(Object.assign({}, repoData), { pull_number: p.pull_request.number }));
-    }
-    else if (eventType === 'check_suite') {
-        const p = payload;
-        if (p.action !== 'completed' || p.check_suite.status !== 'completed') {
-            console.log(`Check suite not completed successfully, ignoring`);
-            return;
-        }
-        try {
-            for (var _b = __asyncValues(p.check_suite.pull_requests), _c; _c = yield _b.next(), !_c.done;) {
-                const pr = _c.value;
-                yield validateAndMergePR(Object.assign(Object.assign({}, repoData), { pull_number: pr.number }));
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) yield _a.call(_b);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-    }
-});
-/**
- * Check if a PR meets the criteria for auto merge and, if it does, merge it
- *
- * Checks:
- * 1. Check if a PR is an automatically opened version bump PR
- * 2. Check if the PR is mergeable
- *
- * @param object payload
- */
-const validateAndMergePR = (pullRequestQueryData) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`Pull request: ${pullRequestQueryData.pull_number}`);
-    const token = core.getInput('github-token');
-    const octokit = github.getOctokit(token);
-    const { data: pullRequest } = yield octokit.pulls.get(Object.assign({}, pullRequestQueryData));
-    if (!isAutoBumpPR(pullRequest))
-        return;
     if (!pullRequest.mergeable) {
         console.log(`Pull request is not mergeable, exiting.`);
         return;
     }
-    yield octokit.pulls.merge(Object.assign(Object.assign({}, pullRequestQueryData), { pull_number: pullRequest.number }));
+    yield octokit.pulls.merge(prData);
 });
 /**
  * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
