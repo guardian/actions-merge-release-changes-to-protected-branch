@@ -42,8 +42,8 @@ interface Package {
 const decideAndTriggerAction = () => {
 	const eventName = github.context.eventName;
 	const payload = github.context.payload;
-	console.log(`Event name: ${eventName}`);
-	console.log(`Action type: ${payload.action ?? 'Unknown'}`);
+	core.debug(`Event name: ${eventName}`);
+	core.debug(`Action type: ${payload.action ?? 'Unknown'}`);
 
 	switch (eventName) {
 		case 'push':
@@ -56,8 +56,8 @@ const decideAndTriggerAction = () => {
 };
 
 const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
-	console.log('checkApproveAndMergePR');
-	console.log(`Pull request: ${payload.pull_request.number}`);
+	core.debug('checkApproveAndMergePR');
+	core.debug(`Pull request: ${payload.pull_request.number}`);
 
 	const prData = {
 		owner: payload.repository.owner.login,
@@ -72,19 +72,19 @@ const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
 	// Get PR from the API to be sure
 	const { data: pullRequest } = await octokit.pulls.get(prData);
 
-	// Check and approve PR
+	core.info(`Checking PR meets conditions`);
 	if (
 		!pullRequest.user ||
 		pullRequest.user.login !== config.pullRequestAuthor
 	) {
-		console.log(
+		core.info(
 			`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`,
 		);
 		return;
 	}
 
 	if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
-		console.log(
+		core.info(
 			`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`,
 		);
 		return;
@@ -126,16 +126,20 @@ const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
 		}
 	}
 
+	core.info(`Conditions met. Approving.`);
 	await octokit.pulls.createReview({
 		...prData,
 		event: 'APPROVE',
 		body: 'Approved automatically by the @guardian/release-action',
 	});
 
+	core.info(`Checking if PR is mergeable`);
 	if (!pullRequest.mergeable) {
-		console.log(`Pull request is not mergeable, exiting.`);
+		core.info(`Pull request is not mergeable, exiting.`);
 		return;
 	}
+
+	core.info(`PR mergeable. Merging`);
 
 	await octokit.pulls.merge(prData);
 };
@@ -152,11 +156,11 @@ const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
  * @throws Throws an error if any of the preflight checks or the release process fail
  */
 const checkAndReleaseLibrary = async (payload: PushEvent) => {
-	console.log('checkAndReleaseLibrary');
+	core.debug('checkAndReleaseLibrary');
 	const token = core.getInput('github-token');
 
 	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
-		console.log(`Push is not to ${config.releaseBranch}, ignoring`);
+		core.info(`Push is not to ${config.releaseBranch}, ignoring`);
 		return;
 	}
 
@@ -165,12 +169,13 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	});
 
 	if (!ret) {
-		console.log('New release not created. No further action needed.');
+		core.info('New release not created. No further action needed.');
 		return;
 	}
 
-	console.log('Diff detected. Opening pull request');
+	core.info('Diff detected. Opening pull request');
 
+	core.startGroup('Getting version');
 	let output = '';
 	await exec('cat package.json', [], {
 		listeners: {
@@ -182,10 +187,13 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 	const newVersion = ((JSON.parse(output) as unknown) as Package).version;
 
+	core.endGroup();
+
 	if (!newVersion) {
-		console.log('Could not find version number');
-		return;
+		throw new Error('Could not find version number');
 	}
+
+	core.startGroup('Commiting changes');
 
 	const message = `${config.prTitlePrefix}${newVersion}`;
 	const newBranch = `${config.newBranchPrefix}${newVersion}`;
@@ -203,8 +211,11 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	await exec(`git status`);
 	await exec(`git push -u origin "${newBranch}"`);
 
+	core.endGroup();
+
 	const octokit = github.getOctokit(token);
 
+	core.info('Creating pull request');
 	await octokit.pulls.create({
 		owner: payload.repository.owner.login,
 		repo: payload.repository.name,
@@ -217,7 +228,7 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 async function run(): Promise<void> {
 	try {
-		console.log('Running @guardian/release');
+		core.info('Running @guardian/release');
 		await decideAndTriggerAction();
 	} catch (error) {
 		if (error instanceof Error) {

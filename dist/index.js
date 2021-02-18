@@ -7009,8 +7009,8 @@ const decideAndTriggerAction = () => {
     var _a;
     const eventName = github.context.eventName;
     const payload = github.context.payload;
-    console.log(`Event name: ${eventName}`);
-    console.log(`Action type: ${(_a = payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
+    core.debug(`Event name: ${eventName}`);
+    core.debug(`Action type: ${(_a = payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
     switch (eventName) {
         case 'push':
             return checkAndReleaseLibrary(payload);
@@ -7021,8 +7021,8 @@ const decideAndTriggerAction = () => {
     }
 };
 const checkApproveAndMergePR = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('checkApproveAndMergePR');
-    console.log(`Pull request: ${payload.pull_request.number}`);
+    core.debug('checkApproveAndMergePR');
+    core.debug(`Pull request: ${payload.pull_request.number}`);
     const prData = {
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
@@ -7033,14 +7033,14 @@ const checkApproveAndMergePR = (payload) => __awaiter(void 0, void 0, void 0, fu
     // PR information isn't necessarily up to date in webhook payload
     // Get PR from the API to be sure
     const { data: pullRequest } = yield octokit.pulls.get(prData);
-    // Check and approve PR
+    core.info(`Checking PR meets conditions`);
     if (!pullRequest.user ||
         pullRequest.user.login !== config.pullRequestAuthor) {
-        console.log(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
+        core.info(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
         return;
     }
     if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
-        console.log(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
+        core.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
         return;
     }
     if (pullRequest.changed_files > config.maxFilesChanged) {
@@ -7062,11 +7062,14 @@ const checkApproveAndMergePR = (payload) => __awaiter(void 0, void 0, void 0, fu
             }
         }
     }
+    core.info(`Conditions met. Approving.`);
     yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/release-action' }));
+    core.info(`Checking if PR is mergeable`);
     if (!pullRequest.mergeable) {
-        console.log(`Pull request is not mergeable, exiting.`);
+        core.info(`Pull request is not mergeable, exiting.`);
         return;
     }
+    core.info(`PR mergeable. Merging`);
     yield octokit.pulls.merge(prData);
 });
 /**
@@ -7081,20 +7084,21 @@ const checkApproveAndMergePR = (payload) => __awaiter(void 0, void 0, void 0, fu
  * @throws Throws an error if any of the preflight checks or the release process fail
  */
 const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('checkAndReleaseLibrary');
+    core.debug('checkAndReleaseLibrary');
     const token = core.getInput('github-token');
     if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
-        console.log(`Push is not to ${config.releaseBranch}, ignoring`);
+        core.info(`Push is not to ${config.releaseBranch}, ignoring`);
         return;
     }
     const ret = yield exec_1.exec('git diff --quiet', [], {
         ignoreReturnCode: true,
     });
     if (!ret) {
-        console.log('New release not created. No further action needed.');
+        core.info('New release not created. No further action needed.');
         return;
     }
-    console.log('Diff detected. Opening pull request');
+    core.info('Diff detected. Opening pull request');
+    core.startGroup('Getting version');
     let output = '';
     yield exec_1.exec('cat package.json', [], {
         listeners: {
@@ -7104,10 +7108,11 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         },
     });
     const newVersion = JSON.parse(output).version;
+    core.endGroup();
     if (!newVersion) {
-        console.log('Could not find version number');
-        return;
+        throw new Error('Could not find version number');
     }
+    core.startGroup('Commiting changes');
     const message = `${config.prTitlePrefix}${newVersion}`;
     const newBranch = `${config.newBranchPrefix}${newVersion}`;
     yield exec_1.exec(`git config --global user.email "${config.commitEmail}"`);
@@ -7119,7 +7124,9 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
     yield exec_1.exec(`git commit -m "${message}"`);
     yield exec_1.exec(`git status`);
     yield exec_1.exec(`git push -u origin "${newBranch}"`);
+    core.endGroup();
     const octokit = github.getOctokit(token);
+    core.info('Creating pull request');
     yield octokit.pulls.create({
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
@@ -7132,7 +7139,7 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('Running @guardian/release');
+            core.info('Running @guardian/release');
             yield decideAndTriggerAction();
         }
         catch (error) {
