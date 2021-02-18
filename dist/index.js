@@ -7175,22 +7175,22 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
         console.log(`Push is not to ${config.releaseBranch}, ignoring`);
         return;
     }
+    const ret = yield exec_1.exec('git diff --quiet', [], {
+        ignoreReturnCode: true,
+    });
+    if (!ret) {
+        console.log('New release not created. No further action needed.');
+        return;
+    }
+    console.log('Diff detected. Opening pull request');
     let output = '';
-    const options = {
+    yield exec_1.exec('cat package.json', [], {
         listeners: {
             stdout: (data) => {
                 output += data.toString();
             },
         },
-    };
-    yield exec_1.exec('git diff --quiet', [], options);
-    if (!output) {
-        console.log('New release not created. No further action needed.');
-        return;
-    }
-    console.log('Diff detected. Opening pull request');
-    output = '';
-    yield exec_1.exec('cat package.json', [], options);
+    });
     const newVersion = JSON.parse(output).version;
     if (!newVersion) {
         console.log('Could not find version number');

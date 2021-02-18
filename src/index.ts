@@ -263,26 +263,25 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 		return;
 	}
 
-	let output = '';
-	const options = {
-		listeners: {
-			stdout: (data: Buffer) => {
-				output += data.toString();
-			},
-		},
-	};
+	const ret = await exec('git diff --quiet', [], {
+		ignoreReturnCode: true,
+	});
 
-	await exec('git diff --quiet', [], options);
-
-	if (!output) {
+	if (!ret) {
 		console.log('New release not created. No further action needed.');
 		return;
 	}
 
 	console.log('Diff detected. Opening pull request');
 
-	output = '';
-	await exec('cat package.json', [], options);
+	let output = '';
+	await exec('cat package.json', [], {
+		listeners: {
+			stdout: (data: Buffer) => {
+				output += data.toString();
+			},
+		},
+	});
 
 	const newVersion = ((JSON.parse(output) as unknown) as Package).version;
 
