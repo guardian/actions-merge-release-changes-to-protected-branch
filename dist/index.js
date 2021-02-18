@@ -7171,10 +7171,10 @@ const validateAndMergePR = (pullRequestQueryData) => __awaiter(void 0, void 0, v
 const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log('checkAndReleaseLibrary');
     const token = core.getInput('github-token');
-    if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
-        console.log(`Push is not to ${config.releaseBranch}, ignoring`);
-        return;
-    }
+    // if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
+    // 	console.log(`Push is not to ${config.releaseBranch}, ignoring`);
+    // 	return;
+    // }
     let output = '';
     let error = '';
     const options = {

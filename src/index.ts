@@ -258,10 +258,10 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 	console.log('checkAndReleaseLibrary');
 	const token = core.getInput('github-token');
 
-	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
-		console.log(`Push is not to ${config.releaseBranch}, ignoring`);
-		return;
-	}
+	// if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
+	// 	console.log(`Push is not to ${config.releaseBranch}, ignoring`);
+	// 	return;
+	// }
 
 	let output = '';
 	let error = '';
