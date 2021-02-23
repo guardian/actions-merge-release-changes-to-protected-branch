@@ -25,7 +25,7 @@ export const getConfig = (): Config => {
 		maxFileChanges: 2,
 		allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
 		expectedChanges: ['-  "version": "', '+  "version": "'],
-		pullRequestAuthor: getConfigValue('pr-author', 'jamie-lynch'), // 'guardian-ci',
+		pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'),
 		pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'),
 		releaseBranch: getConfigValue('release-branch', 'main'),
 		newBranchPrefix: getConfigValue('branch-prefix', 'release-'),
