@@ -21,7 +21,7 @@ In order to run these steps, two workflow files are required in your project.
 
 **Open PR**
 
-The workflow which opens the PR should checkout the project and run the release process first. For example:
+On a merge to a release branch, your workflow should run the release and then call the action to PR the file changes. This assumes that the release process modifies the relevant files. [Semantic release](https://github.com/semantic-release/semantic-release) is the recommended release tool. An example config looks like:
 
 ```yaml
 name: CD
