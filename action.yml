@@ -7,6 +7,30 @@ inputs:
   github-token:
     required: true
     description: A GitHub token
+  pr-author:
+    description: The author of version bump PRs
+    required: false
+    default: guardian-ci
+  pr-prefix:
+    description: The prefix to add to version bump PRs
+    required: false
+    default: 'chore(release):'
+  release-branch:
+    description: The branch which releases are run from
+    required: false
+    default: main
+  branch-prefix:
+    description: The prefix to add to the branch name to commit version bump changes to
+    required: false
+    default: release-
+  commit-user:
+    description: The username of the user to commit version bump changes with
+    required: false
+    default: guardian-ci
+  commit-email:
+    description: The email of the user to commit version bump changes with
+    required: false
+    default: guardian-ci@users.noreply.github.com
 branding:
   icon: 'package'
   color: 'gray-dark'
