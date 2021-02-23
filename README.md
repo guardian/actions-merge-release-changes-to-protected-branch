@@ -113,6 +113,17 @@ Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other work
 | commit-user     | The username of the user to commit version bump changes with           | false    | guardian-ci                          |
 | commit-email    | The email of the user to commit version bump changes with              | false    | guardian-ci@users.noreply.github.com |
 
+### Repository Settings
+
+This action has been built for repositories that have branch protection set on their release branch(s). The following options are recommended:
+
+-   Require pull request reviews before merging
+-   Require status checks to pass before merging
+-   Require branches to be up to date before merging
+-   Include administrators
+
+If you also have the `Require review from Code Owners` option enabled, you will need to add the PR author to the CODEOWNERS file. You can do this only for the files that will be changed during the release process.
+
 ## Development
 
 We follow the [script/task](https://github.com/github/scripts-to-rule-them-all) pattern, find useful scripts within the [script](https://github.com/guardian/post-release-action/blob/main/script) directory for common tasks.
