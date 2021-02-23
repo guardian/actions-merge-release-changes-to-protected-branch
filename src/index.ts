@@ -5,26 +5,14 @@ import type {
 	PullRequestEvent,
 	PushEvent,
 } from '@octokit/webhooks-definitions/schema';
-
-const config = {
-	pullRequestAuthor: 'jamie-lynch', // 'guardian-ci',
-	pullRequestPrefix: 'chore(release):',
-	maxFilesChanged: 2,
-	maxFileChanges: 2,
-	allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
-	expectedChanges: ['-  "version": "', '+  "version": "'],
-	releaseBranch: 'main',
-	prTitlePrefix: 'chore(release): ',
-	newBranchPrefix: 'release-',
-	commitUser: 'guardian-ci',
-	commitEmail: 'guardian-ci@users.noreply.github.com',
-};
+import type { Config } from './config';
+import { getConfig } from './config';
 
 interface Package {
 	version?: string;
 }
 
-const decideAndTriggerAction = () => {
+const decideAndTriggerAction = (config: Config) => {
 	const eventName = github.context.eventName;
 	const payload = github.context.payload;
 	core.debug(`Event name: ${eventName}`);
@@ -32,15 +20,18 @@ const decideAndTriggerAction = () => {
 
 	switch (eventName) {
 		case 'push':
-			return checkAndPRChanges(payload as PushEvent);
+			return checkAndPRChanges(payload as PushEvent, config);
 		case 'pull_request':
-			return checkApproveAndMergePR(payload as PullRequestEvent);
+			return checkApproveAndMergePR(payload as PullRequestEvent, config);
 		default:
 			throw new Error(`Unknown eventName: ${eventName}`);
 	}
 };
 
-const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
+const checkApproveAndMergePR = async (
+	payload: PullRequestEvent,
+	config: Config,
+) => {
 	core.debug('checkApproveAndMergePR');
 	core.debug(`Pull request: ${payload.pull_request.number}`);
 
@@ -50,7 +41,7 @@ const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
 		pull_number: payload.pull_request.number,
 	};
 
-	const token = core.getInput('github-token');
+	const token = core.getInput('github-token', { required: true });
 	const octokit = github.getOctokit(token);
 
 	// PR information isn't necessarily up to date in webhook payload
@@ -129,9 +120,9 @@ const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
 	await octokit.pulls.merge(prData);
 };
 
-const checkAndPRChanges = async (payload: PushEvent) => {
+const checkAndPRChanges = async (payload: PushEvent, config: Config) => {
 	core.debug('checkAndReleaseLibrary');
-	const token = core.getInput('github-token');
+	const token = core.getInput('github-token', { required: true });
 
 	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
 		core.info(`Push is not to ${config.releaseBranch}, ignoring`);
@@ -169,7 +160,7 @@ const checkAndPRChanges = async (payload: PushEvent) => {
 
 	core.startGroup('Commiting changes');
 
-	const message = `${config.prTitlePrefix}${newVersion}`;
+	const message = `${config.pullRequestPrefix}${newVersion}`;
 	const newBranch = `${config.newBranchPrefix}${newVersion}`;
 
 	await exec(`git config --global user.email "${config.commitEmail}"`);
@@ -203,7 +194,8 @@ const checkAndPRChanges = async (payload: PushEvent) => {
 async function run(): Promise<void> {
 	try {
 		core.info('Running @guardian/post-release-action');
-		await decideAndTriggerAction();
+		const config = getConfig();
+		await decideAndTriggerAction(config);
 	} catch (error) {
 		if (error instanceof Error) {
 			core.setFailed(error.message);

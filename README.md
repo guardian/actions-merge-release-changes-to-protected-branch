@@ -100,6 +100,18 @@ jobs:
 
 Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other workflow actions, hence the use of `secrets.CI_TOKEN_*`. Two tokens are required as a user cannot approve their own pull request.
 
+### Inputs
+
+| Name           | Description                                                            | Required | Default                              |
+| -------------- | ---------------------------------------------------------------------- | -------- | ------------------------------------ |
+| github-token   | A GitHub token to complete the required actions                        | true     | -                                    |
+| pr-author      | The author of version bump PRs                                         | false    | guardian-ci                          |
+| pr-prefix      | The prefix to add to version bump PRs                                  | false    | chore(release):                      |
+| release-branch | The branch which releases are run from                                 | false    | main                                 |
+| branch-prefix  | The prefix to add to the branch name to commit version bump changes to | false    | release-                             |
+| commit-user    | The username of the user to commit version bump changes with           | false    | guardian-ci                          |
+| commit-email   | The email of the user to commit version bump changes with              | false    | guardian-ci@users.noreply.github.com |
+
 ## Development
 
 We follow the [script/task](https://github.com/github/scripts-to-rule-them-all) pattern, find useful scripts within the [script](https://github.com/guardian/post-release-action/blob/main/script) directory for common tasks.
