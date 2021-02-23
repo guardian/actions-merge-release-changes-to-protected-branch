@@ -6967,23 +6967,34 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getConfig = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const packageManagerConfig = {
+    npm: {
+        maxFilesChanged: 2,
+        maxFileChanges: 2,
+        allowedFiles: ['package.json', 'package-lock.json'],
+        expectedChanges: ['-  "version": "', '+  "version": "'],
+    },
+    yarn: {
+        maxFilesChanged: 1,
+        maxFileChanges: 1,
+        allowedFiles: ['package.json'],
+        expectedChanges: ['-  "version": "', '+  "version": "'],
+    },
+};
+const allowedPackageManagerValues = Object.keys(packageManagerConfig);
 const getConfigValue = (key, d) => {
     const input = core.getInput(key);
     return input && input !== '' ? input : d;
 };
+const getPackageManagerConfig = () => {
+    const pm = getConfigValue('package-manager', 'npm');
+    if (!allowedPackageManagerValues.includes(pm)) {
+        throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
+    }
+    return packageManagerConfig[pm];
+};
 const getConfig = () => {
-    return {
-        maxFilesChanged: 2,
-        maxFileChanges: 2,
-        allowedFiles: ['package.json', 'package-lock.json', 'yarn.lock'],
-        expectedChanges: ['-  "version": "', '+  "version": "'],
-        pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'),
-        pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'),
-        releaseBranch: getConfigValue('release-branch', 'main'),
-        newBranchPrefix: getConfigValue('branch-prefix', 'release-'),
-        commitUser: getConfigValue('commit-user', 'guardian-ci'),
-        commitEmail: getConfigValue('commit-email', 'guardian-ci@users.noreply.github.com'),
-    };
+    return Object.assign(Object.assign({}, getPackageManagerConfig()), { pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'), releaseBranch: getConfigValue('release-branch', 'main'), newBranchPrefix: getConfigValue('branch-prefix', 'release-'), commitUser: getConfigValue('commit-user', 'guardian-ci'), commitEmail: getConfigValue('commit-email', 'guardian-ci@users.noreply.github.com') });
 };
 exports.getConfig = getConfig;
 
