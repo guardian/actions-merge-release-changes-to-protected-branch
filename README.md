@@ -21,7 +21,7 @@ In order to run these steps, two workflow files are required in your project.
 
 **Open PR**
 
-The workflow which opens the PR should checkout the project and run the release process first. For example:
+On a merge to a release branch, your workflow should run the release and then call the action to PR the file changes. This assumes that the release process modifies the relevant files. [Semantic release](https://github.com/semantic-release/semantic-release) is the recommended release tool. An example config looks like:
 
 ```yaml
 name: CD
@@ -112,6 +112,17 @@ Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other work
 | branch-prefix   | The prefix to add to the branch name to commit version bump changes to | false    | release-                             |
 | commit-user     | The username of the user to commit version bump changes with           | false    | guardian-ci                          |
 | commit-email    | The email of the user to commit version bump changes with              | false    | guardian-ci@users.noreply.github.com |
+
+### Repository Settings
+
+This action has been built for repositories that have branch protection set on their release branch(s). The following options are recommended:
+
+-   Require pull request reviews before merging
+-   Require status checks to pass before merging
+-   Require branches to be up to date before merging
+-   Include administrators
+
+If you also have the `Require review from Code Owners` option enabled, you will need to add the PR author to the CODEOWNERS file. You can do this only for the files that will be changed during the release process.
 
 ## Development
 
