@@ -24,21 +24,6 @@ interface Package {
 	version?: string;
 }
 
-/**
- * Decide what to do depending on the payload received
- *
- * For pushes to main, run preflight checks and then, if successful, release the
- * library to npm and open a new PR to bump the version in the package.json
- *
- * For pull requests, check if the PR matches the pattern for a version bump.
- * If it does then validate the PR to make sure it meets the requirements and,
- * if it does, approve it
- * Check that the PR is mergeable and, if it is, merge it
- *
- * @param object payload
- *
- * @throws Throws an error if the payload does not match any known conditions or if the underlying action throws an error
- */
 const decideAndTriggerAction = () => {
 	const eventName = github.context.eventName;
 	const payload = github.context.payload;
@@ -47,7 +32,7 @@ const decideAndTriggerAction = () => {
 
 	switch (eventName) {
 		case 'push':
-			return checkAndReleaseLibrary(payload as PushEvent);
+			return checkAndPRChanges(payload as PushEvent);
 		case 'pull_request':
 			return checkApproveAndMergePR(payload as PullRequestEvent);
 		default:
@@ -144,18 +129,7 @@ const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
 	await octokit.pulls.merge(prData);
 };
 
-/**
- * Run any preflight checks, release the library to npm and open a PR to bump the version in the package.json
- *
- * Checks:
- * 1. The branch ${config.releaseBranch}
- * 2. There is a diff
- *
- * @param object payload
- *
- * @throws Throws an error if any of the preflight checks or the release process fail
- */
-const checkAndReleaseLibrary = async (payload: PushEvent) => {
+const checkAndPRChanges = async (payload: PushEvent) => {
 	core.debug('checkAndReleaseLibrary');
 	const token = core.getInput('github-token');
 
