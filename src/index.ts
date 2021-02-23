@@ -130,7 +130,7 @@ const checkApproveAndMergePR = async (payload: PullRequestEvent) => {
 	await octokit.pulls.createReview({
 		...prData,
 		event: 'APPROVE',
-		body: 'Approved automatically by the @guardian/release-action',
+		body: 'Approved automatically by the @guardian/post-release-action',
 	});
 
 	core.info(`Checking if PR is mergeable`);
@@ -228,7 +228,7 @@ const checkAndReleaseLibrary = async (payload: PushEvent) => {
 
 async function run(): Promise<void> {
 	try {
-		core.info('Running @guardian/release');
+		core.info('Running @guardian/post-release-action');
 		await decideAndTriggerAction();
 	} catch (error) {
 		if (error instanceof Error) {

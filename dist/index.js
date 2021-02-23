@@ -7063,7 +7063,7 @@ const checkApproveAndMergePR = (payload) => __awaiter(void 0, void 0, void 0, fu
         }
     }
     core.info(`Conditions met. Approving.`);
-    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/release-action' }));
+    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/post-release-action' }));
     core.info(`Checking if PR is mergeable`);
     if (!pullRequest.mergeable) {
         core.info(`Pull request is not mergeable, exiting.`);
@@ -7139,7 +7139,7 @@ const checkAndReleaseLibrary = (payload) => __awaiter(void 0, void 0, void 0, fu
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.info('Running @guardian/release');
+            core.info('Running @guardian/post-release-action');
             yield decideAndTriggerAction();
         }
         catch (error) {

@@ -1,7 +1,7 @@
 {
-  "name": "@guardian/release-action",
+  "name": "@guardian/post-release-action",
   "version": "1.0.0",
-  "description": "A GitHub action to run the continuously deploy process for Guardian repositories",
+  "description": "A GitHub action to handle the post release process for repositories with branch protection",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
