@@ -42,13 +42,13 @@ jobs:
                   node-version: 14
             - name: Release
               env:
-                  GITHUB_TOKEN: ${{ secrets.CI_TOKEN_1 }}
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GU_GITHUB_TOKEN_1 }}
+                  NPM_TOKEN: ${{ secrets.GU_NPM_TOKEN }}
               run: npm run release
             - name: Validate and open PR
               uses: guardian/post-release-action@main
               with:
-                  github-token: ${{ secrets.CI_TOKEN_1 }}
+                  github-token: ${{ secrets.GU_GITHUB_TOKEN_1 }}
 ```
 
 **Approve and merge PR**
@@ -66,7 +66,7 @@ jobs:
             - name: Validate and approve release PRs
               uses: guardian/post-release-action@main
               with:
-                  github-token: ${{ secrets.CI_TOKEN_2 }}
+                  github-token: ${{ secrets.GU_GITHUB_TOKEN_2 }}
 ```
 
 You probably want it to run after your other CI checks, e.g.
