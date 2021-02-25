@@ -1,7 +1,7 @@
 {
-  "name": "@guardian/post-release-action",
+  "name": "@guardian/actions-merge-workflow-changes-to-protected-branch",
   "version": "1.0.0",
-  "description": "A GitHub action to handle the post release process for repositories with branch protection",
+  "description": "A GitHub action to open, approve and merge a PR with changes generated during a workflow action on a protected branch",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

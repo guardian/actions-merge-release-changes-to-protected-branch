@@ -7097,7 +7097,7 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         }
     }
     core.info(`Conditions met. Approving.`);
-    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/post-release-action' }));
+    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/actions-merge-workflow-changes-to-protected-branch' }));
     core.info(`Checking if PR is mergeable`);
     if (!pullRequest.mergeable) {
         core.info(`Pull request is not mergeable, exiting.`);
@@ -7162,7 +7162,7 @@ const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0,
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.info('Running @guardian/post-release-action');
+            core.info('Running @guardian/actions-merge-workflow-changes-to-protected-branch');
             const config = config_1.getConfig();
             yield decideAndTriggerAction(config);
         }
@@ -7305,7 +7305,7 @@ module.exports = require("zlib");;
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
-/******/ 	
+/******/
 /******/ 	// The require function
 /******/ 	function __nccwpck_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -7318,7 +7318,7 @@ module.exports = require("zlib");;
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/ 	
+/******/
 /******/ 		// Execute the module function
 /******/ 		var threw = true;
 /******/ 		try {
@@ -7327,14 +7327,14 @@ module.exports = require("zlib");;
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
+/******/
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat */
-/******/ 	
+/******/
 /******/ 	__nccwpck_require__.ab = __dirname + "/";/************************************************************************/
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
