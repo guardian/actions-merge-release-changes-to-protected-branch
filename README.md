@@ -42,13 +42,13 @@ jobs:
                   node-version: 14
             - name: Release
               env:
-                  GITHUB_TOKEN: ${{ secrets.GU_GITHUB_TOKEN_1 }}
+                  GITHUB_TOKEN: ${{ secrets.GU_GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.GU_NPM_TOKEN }}
               run: npm run release
             - name: Validate and open PR
               uses: guardian/post-release-action@main
               with:
-                  github-token: ${{ secrets.GU_GITHUB_TOKEN_1 }}
+                  github-token: ${{ secrets.GU_GITHUB_TOKEN }}
 ```
 
 **Approve and merge PR**
@@ -66,7 +66,7 @@ jobs:
             - name: Validate and approve release PRs
               uses: guardian/post-release-action@main
               with:
-                  github-token: ${{ secrets.GU_GITHUB_TOKEN_2 }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 You probably want it to run after your other CI checks, e.g.
@@ -93,12 +93,12 @@ jobs:
             - name: Validate, approve and merge release PRs
               uses: guardian/post-release-action@main
               with:
-                  github-token: ${{ secrets.CI_TOKEN_2 }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Tokens
 
-Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other workflow actions, hence the use of `secrets.CI_TOKEN_*`. Two tokens are required as a user cannot approve their own pull request.
+Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other workflow actions, hence the use of `secrets.GU_GITHUB_TOKEN` for the step which opens the pull request. As merging the pull request does not need to trigger another step, the `secrets.GITHUB_TOKEN` can be used for this part.
 
 ### Inputs
 
