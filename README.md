@@ -126,6 +126,12 @@ If you also have the `Require review from Code Owners` option enabled, you will 
 
 ## Development
 
+### Build
+
+At runtime, GitHub actions are downloaded from the repository and so the repository must contain everything required to run the project ([more on GitHub action delivery](https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action#commit-tag-and-push-your-action-to-github)). To avoid having to commit the `node_modules` directory, this project uses [@vercel/ncc](https://github.com/vercel/ncc) to compile the code into a single file along with the dependencies. Changes to the build should be included in the same commits that change the source code.
+
+### Scripts
+
 We follow the [script/task](https://github.com/github/scripts-to-rule-them-all) pattern, find useful scripts within the [script](https://github.com/guardian/post-release-action/blob/main/script) directory for common tasks.
 
 -   `./script/setup` to install dependencies
