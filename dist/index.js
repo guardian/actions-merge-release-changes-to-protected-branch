@@ -7136,7 +7136,7 @@ const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0,
         throw new Error('Could not find version number');
     }
     core.startGroup('Commiting changes');
-    const message = `${config.pullRequestPrefix}${newVersion}`;
+    const message = `${config.pullRequestPrefix} ${newVersion}`;
     const newBranch = `${config.newBranchPrefix}${newVersion}`;
     yield exec_1.exec(`git config --global user.email "${config.commitEmail}"`);
     yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);

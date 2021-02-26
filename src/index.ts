@@ -160,7 +160,7 @@ const checkAndPRChanges = async (payload: PushEvent, config: Config) => {
 
 	core.startGroup('Commiting changes');
 
-	const message = `${config.pullRequestPrefix}${newVersion}`;
+	const message = `${config.pullRequestPrefix} ${newVersion}`;
 	const newBranch = `${config.newBranchPrefix}${newVersion}`;
 
 	await exec(`git config --global user.email "${config.commitEmail}"`);

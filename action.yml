@@ -16,7 +16,7 @@ inputs:
     required: false
     default: guardian-ci
   pr-prefix:
-    description: The prefix to add to version bump PRs
+    description: The prefix to add to version bump PRs (note that a space will be added after the value)
     required: false
     default: 'chore(release):'
   release-branch:
