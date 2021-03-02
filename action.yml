@@ -1,5 +1,5 @@
 name: '@guardian/actions-merge-workflow-changes-to-protected-branch'
-description: 'A GitHub action to open, approve and merge a PR with changes generated during a workflow action on a protected branch'
+description: 'A GitHub action to open, approve and merge a PR of changes generated during a workflow action on a protected branch'
 runs:
   using: 'node12'
   main: 'dist/index.js'
