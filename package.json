@@ -1,7 +1,7 @@
 {
-  "name": "@guardian/actions-merge-workflow-changes-to-protected-branch",
+  "name": "@guardian/actions-merge-release-changes-to-protected-branch",
   "version": "1.0.0",
-  "description": "A GitHub action to open, approve and merge a PR of changes generated during a workflow action on a protected branch",
+  "description": "A GitHub action to open, approve and merge a PR of changes generated during a release on a protected branch",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

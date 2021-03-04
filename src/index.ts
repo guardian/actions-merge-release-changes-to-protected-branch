@@ -107,7 +107,7 @@ const checkApproveAndMergePR = async (
 		...prData,
 		event: 'APPROVE',
 		body:
-			'Approved automatically by the @guardian/actions-merge-workflow-changes-to-protected-branch',
+			'Approved automatically by the @guardian/actions-merge-release-changes-to-protected-branch',
 	});
 
 	core.info(`Checking if PR is mergeable`);
@@ -195,7 +195,7 @@ const checkAndPRChanges = async (payload: PushEvent, config: Config) => {
 async function run(): Promise<void> {
 	try {
 		core.info(
-			'Running @guardian/actions-merge-workflow-changes-to-protected-branch',
+			'Running @guardian/actions-merge-release-changes-to-protected-branch',
 		);
 		const config = getConfig();
 		await decideAndTriggerAction(config);
