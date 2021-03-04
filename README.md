@@ -1,4 +1,4 @@
-# @guardian/post-release-action
+# @guardian/actions-merge-release-changes-to-protected-branch
 
 **This project is still a WIP and should not be used on any production repositories**
 
@@ -46,7 +46,7 @@ jobs:
                   NPM_TOKEN: ${{ secrets.GU_NPM_TOKEN }}
               run: npm run release
             - name: Validate and open PR
-              uses: guardian/post-release-action@main
+              uses: guardian/actions-merge-release-changes-to-protected-branch@main
               with:
                   github-token: ${{ secrets.GU_GITHUB_TOKEN }}
 ```
@@ -64,7 +64,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Validate and approve release PRs
-              uses: guardian/post-release-action@main
+              uses: guardian/actions-merge-release-changes-to-protected-branch@main
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -91,7 +91,7 @@ jobs:
         needs: [ci]
         steps:
             - name: Validate, approve and merge release PRs
-              uses: guardian/post-release-action@main
+              uses: guardian/actions-merge-release-changes-to-protected-branch@main
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -132,7 +132,7 @@ At runtime, GitHub actions are downloaded from the repository and so the reposit
 
 ### Scripts
 
-We follow the [script/task](https://github.com/github/scripts-to-rule-them-all) pattern, find useful scripts within the [script](https://github.com/guardian/post-release-action/blob/main/script) directory for common tasks.
+We follow the [script/task](https://github.com/github/scripts-to-rule-them-all) pattern, find useful scripts within the [script](https://github.com/guardian/actions-merge-release-changes-to-protected-branch/blob/main/script) directory for common tasks.
 
 -   `./script/setup` to install dependencies
 -   `./script/lint` to lint the code using ESLint

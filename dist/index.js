@@ -7097,7 +7097,7 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         }
     }
     core.info(`Conditions met. Approving.`);
-    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/post-release-action' }));
+    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/actions-merge-release-changes-to-protected-branch' }));
     core.info(`Checking if PR is mergeable`);
     if (!pullRequest.mergeable) {
         core.info(`Pull request is not mergeable, exiting.`);
@@ -7162,7 +7162,7 @@ const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0,
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.info('Running @guardian/post-release-action');
+            core.info('Running @guardian/actions-merge-release-changes-to-protected-branch');
             const config = config_1.getConfig();
             yield decideAndTriggerAction(config);
         }

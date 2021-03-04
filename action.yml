@@ -1,5 +1,5 @@
-name: '@guardian/post-release-action'
-description: 'A GitHub action to handle the post release process for repositories with branch protection'
+name: '@guardian/actions-merge-release-changes-to-protected-branch'
+description: 'A GitHub action to open, approve and merge a PR of changes generated during a release on a protected branch'
 runs:
   using: 'node12'
   main: 'dist/index.js'
