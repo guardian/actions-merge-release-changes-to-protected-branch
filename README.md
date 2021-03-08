@@ -2,6 +2,19 @@
 
 **This project is still a WIP and should not be used on any production repositories**
 
+## Contents
+
+-   [What?](#what)
+-   [Why?](#why)
+-   [How?](#how)
+    -   [Tokens](#tokens)
+    -   [Inputs](#inputs)
+    -   [Repository Settings](#repository-settings)
+    -   [Configuring Releases](#configuring-releases)
+-   [Development](#development)
+    -   [Build](#build)
+    -   [Scripts](#scripts)
+
 ## What?
 
 This action can be used as part of automating the publish process of node libraries to npm. It handles the version update of the `package.json` and `package-lock.json` files for repositories with protected release branches.
