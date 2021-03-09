@@ -93,9 +93,9 @@ const checkApproveAndMergePR = async (
 	// calling the listFiles endpoint
 	if (pullRequest.changed_files !== expectedFilesChanges) {
 		throw new Error(
-			`Pull request changes ${
-				pullRequest.changed_files
-			} files. Expected to see changes to all of the following files: ${allowedFiles.join(
+			`Pull request changes ${pullRequest.changed_files} ${
+				pullRequest.changed_files === 1 ? 'file' : 'files'
+			}. Expected to see changes to all of the following files: ${allowedFiles.join(
 				', ',
 			)}`,
 		);
