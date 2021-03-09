@@ -7125,7 +7125,7 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         if (file.patch) {
             for (const change of expectedChanges) {
                 if (!file.patch.includes(change)) {
-                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}`);
+                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}\n\nPR Diff: ${file.patch}`);
                 }
             }
         }
