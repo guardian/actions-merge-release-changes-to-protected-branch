@@ -7040,6 +7040,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
 const github = __importStar(__nccwpck_require__(5438));
 const config_1 = __nccwpck_require__(6373);
+const utils_1 = __nccwpck_require__(1314);
 const decideAndTriggerAction = (config) => {
     var _a;
     const eventName = github.context.eventName;
@@ -7098,7 +7099,11 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
     // This check does also catch the case when not as many changes as expected
     // are made
     if (pullRequest.changed_files !== expectedFilesChanges) {
-        throw new Error(`Pull request changes ${pullRequest.changed_files} ${pullRequest.changed_files === 1 ? 'file' : 'files'}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
+        throw new Error(`Pull request changes ${pullRequest.changed_files} ${utils_1.maybePluralise({
+            number: pullRequest.changed_files,
+            singular: 'file',
+            plural: 'files',
+        })}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
     }
     const { data: files } = yield octokit.pulls.listFiles(prData);
     for (const file of files) {
@@ -7107,7 +7112,15 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         }
         const expectedChanges = config.expectedChanges[file.filename];
         if (file.changes !== expectedChanges.length) {
-            throw new Error(`${file.changes} in file: ${file.filename}. Expected ${expectedChanges.length}`);
+            throw new Error(`${file.changes} ${utils_1.maybePluralise({
+                number: file.changes,
+                singular: 'change',
+                plural: 'changes',
+            })} in file: ${file.filename}. Expected ${expectedChanges.length} ${utils_1.maybePluralise({
+                number: expectedChanges.length,
+                singular: 'change',
+                plural: 'changes',
+            })}`);
         }
         if (file.patch) {
             for (const change of expectedChanges) {
@@ -7198,6 +7211,21 @@ function run() {
     });
 }
 void run();
+
+
+/***/ }),
+
+/***/ 1314:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.maybePluralise = void 0;
+const maybePluralise = ({ number, singular, plural, }) => {
+    return number === 1 ? singular : plural;
+};
+exports.maybePluralise = maybePluralise;
 
 
 /***/ }),
