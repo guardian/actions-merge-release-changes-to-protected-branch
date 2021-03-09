@@ -7096,7 +7096,7 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
     // checking it at this stage means that we can fail early and avoid
     // calling the listFiles endpoint
     if (pullRequest.changed_files !== expectedFilesChanges) {
-        throw new Error(`Pull request changes ${pullRequest.changed_files} files. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
+        throw new Error(`Pull request changes ${pullRequest.changed_files} ${pullRequest.changed_files === 1 ? 'file' : 'files'}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
     }
     const { data: files } = yield octokit.pulls.listFiles(prData);
     for (const file of files) {
