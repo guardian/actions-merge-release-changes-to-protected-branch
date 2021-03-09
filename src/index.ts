@@ -8,6 +8,7 @@ import type {
 } from '@octokit/webhooks-definitions/schema';
 import type { Config } from './config';
 import { getConfig } from './config';
+import { maybePluralise } from './utils';
 
 interface Package {
 	version?: string;
@@ -95,9 +96,13 @@ const checkApproveAndMergePR = async (
 	// are made
 	if (pullRequest.changed_files !== expectedFilesChanges) {
 		throw new Error(
-			`Pull request changes ${pullRequest.changed_files} ${
-				pullRequest.changed_files === 1 ? 'file' : 'files'
-			}. Expected to see changes to all of the following files: ${allowedFiles.join(
+			`Pull request changes ${pullRequest.changed_files} ${maybePluralise(
+				{
+					number: pullRequest.changed_files,
+					singular: 'file',
+					plural: 'files',
+				},
+			)}. Expected to see changes to all of the following files: ${allowedFiles.join(
 				', ',
 			)}`,
 		);
@@ -118,7 +123,17 @@ const checkApproveAndMergePR = async (
 
 		if (file.changes !== expectedChanges.length) {
 			throw new Error(
-				`${file.changes} change(s) in file: ${file.filename}. Expected ${expectedChanges.length}`,
+				`${file.changes} ${maybePluralise({
+					number: file.changes,
+					singular: 'change',
+					plural: 'changes',
+				})} in file: ${file.filename}. Expected ${
+					expectedChanges.length
+				} ${maybePluralise({
+					number: expectedChanges.length,
+					singular: 'change',
+					plural: 'changes',
+				})}`,
 			);
 		}
 
