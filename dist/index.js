@@ -7090,12 +7090,12 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         core.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
         return;
     }
-    const expectedFilesChanges = Object.keys(config.expectedChanges).length;
+    const allowedFiles = Object.keys(config.expectedChanges);
+    const expectedFilesChanges = allowedFiles.length;
     if (pullRequest.changed_files !== expectedFilesChanges) {
-        throw new Error(`Pull request changes ${pullRequest.changed_files} files. Expected ${expectedFilesChanges} changes.`);
+        throw new Error(`Pull request changes ${pullRequest.changed_files} files. Expected ${expectedFilesChanges} changes - ${allowedFiles.join(', ')}`);
     }
     const { data: files } = yield octokit.pulls.listFiles(prData);
-    const allowedFiles = Object.keys(config.expectedChanges);
     for (const file of files) {
         if (!allowedFiles.includes(file.filename)) {
             throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
