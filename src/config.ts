@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 
-export interface Config extends PackageManagerConfig {
+export interface Config extends FileChangesConfig {
 	pullRequestAuthor: string;
 	pullRequestPrefix: string;
 	releaseBranch: string;
@@ -8,25 +8,22 @@ export interface Config extends PackageManagerConfig {
 	commitUser: string;
 	commitEmail: string;
 }
-interface PackageManagerConfig {
-	maxFilesChanged: number;
-	maxFileChanges: number;
-	allowedFiles: string[];
-	expectedChanges: string[];
+
+type FileChanges = Record<string, string[]>;
+
+interface FileChangesConfig {
+	expectedChanges: FileChanges;
 }
 
-const packageManagerConfig: Record<string, PackageManagerConfig> = {
+const versionBumpChange = ['-  "version": "', '+  "version": "'];
+
+const packageManagerConfig: Record<string, FileChanges> = {
 	npm: {
-		maxFilesChanged: 2,
-		maxFileChanges: 2,
-		allowedFiles: ['package.json', 'package-lock.json'],
-		expectedChanges: ['-  "version": "', '+  "version": "'],
+		'package.json': versionBumpChange,
+		'package-lock.json': versionBumpChange,
 	},
 	yarn: {
-		maxFilesChanged: 1,
-		maxFileChanges: 2,
-		allowedFiles: ['package.json'],
-		expectedChanges: ['-  "version": "', '+  "version": "'],
+		'package.json': versionBumpChange,
 	},
 };
 
@@ -38,7 +35,7 @@ const getConfigValue = (key: string, d: string) => {
 	return input && input !== '' ? input : d;
 };
 
-const getPackageManagerConfig = (): PackageManagerConfig => {
+const getFileChangesConfig = (): FileChangesConfig => {
 	const pm = getConfigValue('package-manager', 'npm');
 
 	if (!allowedPackageManagerValues.includes(pm)) {
@@ -48,13 +45,19 @@ const getPackageManagerConfig = (): PackageManagerConfig => {
 			)}`,
 		);
 	}
+	const pmChanges = packageManagerConfig[pm];
 
-	return packageManagerConfig[pm];
+	return { expectedChanges: { ...getAdditionalChanges(), ...pmChanges } };
+};
+
+const getAdditionalChanges = (): FileChanges => {
+	const additionalChanges = getConfigValue('additional-changes', '{}');
+	return JSON.parse(additionalChanges) as FileChanges;
 };
 
 export const getConfig = (): Config => {
 	return {
-		...getPackageManagerConfig(),
+		...getFileChangesConfig(),
 		pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'),
 		pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'),
 		releaseBranch: getConfigValue('release-branch', 'main'),

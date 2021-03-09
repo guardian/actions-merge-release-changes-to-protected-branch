@@ -11,6 +11,10 @@ inputs:
     description: 'The name of the package manager used: npm, yarn'
     required: false
     default: npm
+  additional-changes:
+    description: 'A JSON object of additional changes where the key is a filename and the value is an array of acceptable changes in that file e.g. `{"README.md": ["-  \"version\": \"", "+  \"version\": \""]}`'
+    required: false
+    default: '{}'
   pr-author:
     description: The author of version bump PRs
     required: false

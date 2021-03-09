@@ -85,33 +85,35 @@ const checkApproveAndMergePR = async (
 		return;
 	}
 
-	if (pullRequest.changed_files > config.maxFilesChanged) {
+	const expectedFilesChanges = Object.keys(config.expectedChanges).length;
+	if (pullRequest.changed_files !== expectedFilesChanges) {
 		throw new Error(
-			`Pull request changes more than ${config.maxFilesChanged} files.`,
+			`Pull request changes ${pullRequest.changed_files} files. Expected ${expectedFilesChanges} changes.`,
 		);
 	}
 
 	const { data: files } = await octokit.pulls.listFiles(prData);
 
+	const allowedFiles = Object.keys(config.expectedChanges);
 	for (const file of files) {
-		if (!config.allowedFiles.includes(file.filename)) {
+		if (!allowedFiles.includes(file.filename)) {
 			throw new Error(
 				`Unallowed file (${
 					file.filename
-				}) changed. Allowed files are: ${config.allowedFiles.join(
-					', ',
-				)}`,
+				}) changed. Allowed files are: ${allowedFiles.join(', ')}`,
 			);
 		}
 
-		if (file.changes > config.maxFileChanges) {
+		const expectedChanges = config.expectedChanges[file.filename];
+
+		if (file.changes !== expectedChanges.length) {
 			throw new Error(
-				`More than ${config.maxFileChanges} change(s) in file: ${file.filename}`,
+				`${file.changes} change(s) in file: ${file.filename}. Expected ${expectedChanges.length}`,
 			);
 		}
 
 		if (file.patch) {
-			for (const change of config.expectedChanges) {
+			for (const change of expectedChanges) {
 				if (!file.patch.includes(change)) {
 					throw new Error(
 						`Expected to see the following string in diff for ${file.filename}: ${change}`,
@@ -194,7 +196,7 @@ const checkAndPRChanges = async (payload: PushEvent, config: Config) => {
 
 	await exec(`git checkout -b "${newBranch}"`);
 
-	for (const file of config.allowedFiles) {
+	for (const file of Object.keys(config.expectedChanges)) {
 		await exec(`git add ${file}`);
 	}
 

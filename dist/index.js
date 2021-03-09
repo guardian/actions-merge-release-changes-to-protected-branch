@@ -6967,18 +6967,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getConfig = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const versionBumpChange = ['-  "version": "', '+  "version": "'];
 const packageManagerConfig = {
     npm: {
-        maxFilesChanged: 2,
-        maxFileChanges: 2,
-        allowedFiles: ['package.json', 'package-lock.json'],
-        expectedChanges: ['-  "version": "', '+  "version": "'],
+        'package.json': versionBumpChange,
+        'package-lock.json': versionBumpChange,
     },
     yarn: {
-        maxFilesChanged: 1,
-        maxFileChanges: 2,
-        allowedFiles: ['package.json'],
-        expectedChanges: ['-  "version": "', '+  "version": "'],
+        'package.json': versionBumpChange,
     },
 };
 const allowedPackageManagerValues = Object.keys(packageManagerConfig);
@@ -6986,15 +6982,20 @@ const getConfigValue = (key, d) => {
     const input = core.getInput(key);
     return input && input !== '' ? input : d;
 };
-const getPackageManagerConfig = () => {
+const getFileChangesConfig = () => {
     const pm = getConfigValue('package-manager', 'npm');
     if (!allowedPackageManagerValues.includes(pm)) {
         throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
     }
-    return packageManagerConfig[pm];
+    const pmChanges = packageManagerConfig[pm];
+    return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };
+};
+const getAdditionalChanges = () => {
+    const additionalChanges = getConfigValue('additional-changes', '{}');
+    return JSON.parse(additionalChanges);
 };
 const getConfig = () => {
-    return Object.assign(Object.assign({}, getPackageManagerConfig()), { pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'), releaseBranch: getConfigValue('release-branch', 'main'), newBranchPrefix: getConfigValue('branch-prefix', 'release-'), commitUser: getConfigValue('commit-user', 'guardian-ci'), commitEmail: getConfigValue('commit-email', 'guardian-ci@users.noreply.github.com') });
+    return Object.assign(Object.assign({}, getFileChangesConfig()), { pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'), releaseBranch: getConfigValue('release-branch', 'main'), newBranchPrefix: getConfigValue('branch-prefix', 'release-'), commitUser: getConfigValue('commit-user', 'guardian-ci'), commitEmail: getConfigValue('commit-email', 'guardian-ci@users.noreply.github.com') });
 };
 exports.getConfig = getConfig;
 
@@ -7089,19 +7090,22 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         core.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
         return;
     }
-    if (pullRequest.changed_files > config.maxFilesChanged) {
-        throw new Error(`Pull request changes more than ${config.maxFilesChanged} files.`);
+    const expectedFilesChanges = Object.keys(config.expectedChanges).length;
+    if (pullRequest.changed_files !== expectedFilesChanges) {
+        throw new Error(`Pull request changes ${pullRequest.changed_files} files. Expected ${expectedFilesChanges} changes.`);
     }
     const { data: files } = yield octokit.pulls.listFiles(prData);
+    const allowedFiles = Object.keys(config.expectedChanges);
     for (const file of files) {
-        if (!config.allowedFiles.includes(file.filename)) {
-            throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${config.allowedFiles.join(', ')}`);
+        if (!allowedFiles.includes(file.filename)) {
+            throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
         }
-        if (file.changes > config.maxFileChanges) {
-            throw new Error(`More than ${config.maxFileChanges} change(s) in file: ${file.filename}`);
+        const expectedChanges = config.expectedChanges[file.filename];
+        if (file.changes !== expectedChanges.length) {
+            throw new Error(`${file.changes} change(s) in file: ${file.filename}. Expected ${expectedChanges.length}`);
         }
         if (file.patch) {
-            for (const change of config.expectedChanges) {
+            for (const change of expectedChanges) {
                 if (!file.patch.includes(change)) {
                     throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}`);
                 }
@@ -7154,7 +7158,7 @@ const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0,
     yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
     yield exec_1.exec(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
     yield exec_1.exec(`git checkout -b "${newBranch}"`);
-    for (const file of config.allowedFiles) {
+    for (const file of Object.keys(config.expectedChanges)) {
         yield exec_1.exec(`git add ${file}`);
     }
     yield exec_1.exec(`git commit -m "${message}"`);

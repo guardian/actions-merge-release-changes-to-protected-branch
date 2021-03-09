@@ -117,16 +117,17 @@ Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other work
 
 ### Inputs
 
-| Name            | Description                                                                             | Required | Default                              |
-| --------------- | --------------------------------------------------------------------------------------- | -------- | ------------------------------------ |
-| github-token    | A GitHub token to complete the required actions                                         | true     | -                                    |
-| package-manager | The name of the package manager used: npm, yarn                                         | false    | npm                                  |
-| pr-author       | The author of version bump PRs                                                          | false    | guardian-ci                          |
-| pr-prefix       | The prefix to add to version bump PRs (note that a space will be added after the value) | false    | chore(release):                      |
-| release-branch  | The branch which releases are run from                                                  | false    | main                                 |
-| branch-prefix   | The prefix to add to the branch name to commit version bump changes to                  | false    | release-                             |
-| commit-user     | The username of the user to commit version bump changes with                            | false    | guardian-ci                          |
-| commit-email    | The email of the user to commit version bump changes with                               | false    | guardian-ci@users.noreply.github.com |
+| Name               | Description                                                                                                                                                                                   | Required | Default                              |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------ |
+| github-token       | A GitHub token to complete the required actions                                                                                                                                               | true     | -                                    |
+| package-manager    | The name of the package manager used: npm, yarn                                                                                                                                               | false    | npm                                  |
+| additional-changes | A JSON object of additional changes where the key is a filename and the value is an array of acceptable changes in that file e.g. `{"README.md": ["- \"version\": \"", "+ \"version\": \""]}` | false    | {}                                   |
+| pr-author          | The author of version bump PRs                                                                                                                                                                | false    | guardian-ci                          |
+| pr-prefix          | The prefix to add to version bump PRs (note that a space will be added after the value)                                                                                                       | false    | chore(release):                      |
+| release-branch     | The branch which releases are run from                                                                                                                                                        | false    | main                                 |
+| branch-prefix      | The prefix to add to the branch name to commit version bump changes to                                                                                                                        | false    | release-                             |
+| commit-user        | The username of the user to commit version bump changes with                                                                                                                                  | false    | guardian-ci                          |
+| commit-email       | The email of the user to commit version bump changes with                                                                                                                                     | false    | guardian-ci@users.noreply.github.com |
 
 ### Repository Settings
 
