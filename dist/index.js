@@ -7092,9 +7092,11 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
     }
     const allowedFiles = Object.keys(config.expectedChanges);
     const expectedFilesChanges = allowedFiles.length;
-    // Although this case would be caught implicity by the following checks
+    // Although part of this case would be caught implicity by the following checks
     // checking it at this stage means that we can fail early and avoid
     // calling the listFiles endpoint
+    // This check does also catch the case when not as many changes as expected
+    // are made
     if (pullRequest.changed_files !== expectedFilesChanges) {
         throw new Error(`Pull request changes ${pullRequest.changed_files} ${pullRequest.changed_files === 1 ? 'file' : 'files'}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
     }

@@ -88,9 +88,11 @@ const checkApproveAndMergePR = async (
 	const allowedFiles = Object.keys(config.expectedChanges);
 	const expectedFilesChanges = allowedFiles.length;
 
-	// Although this case would be caught implicity by the following checks
+	// Although part of this case would be caught implicity by the following checks
 	// checking it at this stage means that we can fail early and avoid
 	// calling the listFiles endpoint
+	// This check does also catch the case when not as many changes as expected
+	// are made
 	if (pullRequest.changed_files !== expectedFilesChanges) {
 		throw new Error(
 			`Pull request changes ${pullRequest.changed_files} ${
