@@ -4,7 +4,7 @@
   "description": "A GitHub action to open, approve and merge a PR of changes generated during a release on a protected branch",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "build": "ncc build src/index.ts -o dist --license licenses.txt",
     "prettier:check": "prettier . --check",
     "prettier:fix": "prettier . --write",
@@ -22,6 +22,7 @@
     "@guardian/eslint-config-typescript": "^0.5.0",
     "@guardian/prettier": "^0.5.0",
     "@octokit/webhooks-definitions": "^3.62.5",
+    "@types/jest": "^26.0.20",
     "@types/node": "^14.14.32",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.15.0",
@@ -32,7 +33,9 @@
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jest": "^24.1.9",
     "eslint-plugin-prettier": "^3.3.1",
+    "jest": "^26.6.3",
     "prettier": "^2.2.1",
+    "ts-jest": "^26.5.3",
     "typescript": "^4.2.3"
   }
 }
