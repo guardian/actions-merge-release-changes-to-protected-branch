@@ -139,7 +139,7 @@ const checkApproveAndMergePR = async (
 
 	await octokit.pulls.merge({
 		...prData,
-		merge_method: decideMergeMethod(payload.repository),
+		merge_method: decideMergeMethod(payload.pull_request.base.repo),
 	});
 };
 
