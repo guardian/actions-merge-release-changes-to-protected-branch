@@ -7116,7 +7116,7 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         return;
     }
     core.info(`PR mergeable. Merging`);
-    yield octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: decideMergeMethod(payload.repository) }));
+    yield octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: decideMergeMethod(payload.pull_request.base.repo) }));
 });
 const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0, function* () {
     core.debug('checkAndReleaseLibrary');
