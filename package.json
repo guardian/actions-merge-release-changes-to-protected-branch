@@ -4,7 +4,7 @@
   "description": "A GitHub action to open, approve and merge a PR of changes generated during a release on a protected branch",
   "main": "dist/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "build": "ncc build src/index.ts -o dist --license licenses.txt",
     "prettier:check": "prettier . --check",
     "prettier:fix": "prettier . --write",
