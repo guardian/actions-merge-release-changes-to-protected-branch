@@ -7055,15 +7055,16 @@ const decideAndTriggerAction = (config) => {
     }
 };
 const decideMergeMethod = (repository) => {
+    if (repository.allow_merge_commit) {
+        return 'merge';
+    }
     if (repository.allow_squash_merge) {
         return 'squash';
     }
-    else if (repository.allow_rebase_merge) {
+    if (repository.allow_rebase_merge) {
         return 'rebase';
     }
-    else {
-        return 'merge';
-    }
+    return 'merge';
 };
 const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, void 0, function* () {
     core.debug('checkApproveAndMergePR');
