@@ -6941,32 +6941,13 @@ function wrappy (fn, cb) {
 /***/ }),
 
 /***/ 6373:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getConfig = exports.parseAdditionalChanges = void 0;
-const core = __importStar(__nccwpck_require__(2186));
+exports.getConfig = exports.getFileChangesConfig = exports.parseAdditionalChanges = exports.getConfigValueOrDefault = void 0;
+const core_1 = __nccwpck_require__(2186);
 const versionBumpChange = ['-  "version": "', '+  "version": "'];
 const packageManagerConfig = {
     npm: {
@@ -6978,22 +6959,11 @@ const packageManagerConfig = {
     },
 };
 const allowedPackageManagerValues = Object.keys(packageManagerConfig);
-const getConfigValue = (key, d) => {
-    const input = core.getInput(key);
+const getConfigValueOrDefault = (key, d) => {
+    const input = core_1.getInput(key);
     return input && input !== '' ? input : d;
 };
-const getFileChangesConfig = () => {
-    const pm = getConfigValue('package-manager', 'npm');
-    if (!allowedPackageManagerValues.includes(pm)) {
-        throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
-    }
-    const pmChanges = packageManagerConfig[pm];
-    return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };
-};
-const getAdditionalChanges = () => {
-    const additionalChanges = getConfigValue('additional-changes', '{}');
-    return exports.parseAdditionalChanges(additionalChanges);
-};
+exports.getConfigValueOrDefault = getConfigValueOrDefault;
 const parseAdditionalChanges = (additionalChanges) => {
     if (!additionalChanges || additionalChanges === '{}') {
         return {};
@@ -7022,8 +6992,21 @@ const parseAdditionalChanges = (additionalChanges) => {
     return json;
 };
 exports.parseAdditionalChanges = parseAdditionalChanges;
+const getFileChangesConfig = () => {
+    const pm = exports.getConfigValueOrDefault('package-manager', 'npm');
+    if (!allowedPackageManagerValues.includes(pm)) {
+        throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
+    }
+    const pmChanges = packageManagerConfig[pm];
+    return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };
+};
+exports.getFileChangesConfig = getFileChangesConfig;
+const getAdditionalChanges = () => {
+    const additionalChanges = exports.getConfigValueOrDefault('additional-changes', '{}');
+    return exports.parseAdditionalChanges(additionalChanges);
+};
 const getConfig = () => {
-    return Object.assign(Object.assign({}, getFileChangesConfig()), { pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'), releaseBranch: getConfigValue('release-branch', 'main'), newBranchPrefix: getConfigValue('branch-prefix', 'release-'), commitUser: getConfigValue('commit-user', 'guardian-ci'), commitEmail: getConfigValue('commit-email', 'guardian-ci@users.noreply.github.com') });
+    return Object.assign(Object.assign({}, exports.getFileChangesConfig()), { pullRequestAuthor: exports.getConfigValueOrDefault('pr-author', 'guardian-ci'), pullRequestPrefix: exports.getConfigValueOrDefault('pr-prefix', 'chore(release):'), releaseBranch: exports.getConfigValueOrDefault('release-branch', 'main'), newBranchPrefix: exports.getConfigValueOrDefault('branch-prefix', 'release-'), commitUser: exports.getConfigValueOrDefault('commit-user', 'guardian-ci'), commitEmail: exports.getConfigValueOrDefault('commit-email', 'guardian-ci@users.noreply.github.com') });
 };
 exports.getConfig = getConfig;
 

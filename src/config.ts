@@ -1,4 +1,4 @@
-import * as core from '@actions/core';
+import { getInput } from '@actions/core';
 
 export interface Config extends FileChangesConfig {
 	pullRequestAuthor: string;
@@ -29,31 +29,10 @@ const packageManagerConfig: Record<string, FileChanges> = {
 
 const allowedPackageManagerValues = Object.keys(packageManagerConfig);
 
-const getConfigValue = (key: string, d: string) => {
-	const input = core.getInput(key);
+export const getConfigValueOrDefault = (key: string, d: string) => {
+	const input = getInput(key);
 
 	return input && input !== '' ? input : d;
-};
-
-const getFileChangesConfig = (): FileChangesConfig => {
-	const pm = getConfigValue('package-manager', 'npm');
-
-	if (!allowedPackageManagerValues.includes(pm)) {
-		throw new Error(
-			`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(
-				', ',
-			)}`,
-		);
-	}
-	const pmChanges = packageManagerConfig[pm];
-
-	return { expectedChanges: { ...getAdditionalChanges(), ...pmChanges } };
-};
-
-const getAdditionalChanges = (): FileChanges => {
-	const additionalChanges = getConfigValue('additional-changes', '{}');
-
-	return parseAdditionalChanges(additionalChanges);
 };
 
 export const parseAdditionalChanges = (
@@ -94,15 +73,42 @@ export const parseAdditionalChanges = (
 	return json;
 };
 
+export const getFileChangesConfig = (): FileChangesConfig => {
+	const pm = getConfigValueOrDefault('package-manager', 'npm');
+
+	if (!allowedPackageManagerValues.includes(pm)) {
+		throw new Error(
+			`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(
+				', ',
+			)}`,
+		);
+	}
+	const pmChanges = packageManagerConfig[pm];
+
+	return { expectedChanges: { ...getAdditionalChanges(), ...pmChanges } };
+};
+
+const getAdditionalChanges = (): FileChanges => {
+	const additionalChanges = getConfigValueOrDefault(
+		'additional-changes',
+		'{}',
+	);
+
+	return parseAdditionalChanges(additionalChanges);
+};
+
 export const getConfig = (): Config => {
 	return {
 		...getFileChangesConfig(),
-		pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'),
-		pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'),
-		releaseBranch: getConfigValue('release-branch', 'main'),
-		newBranchPrefix: getConfigValue('branch-prefix', 'release-'),
-		commitUser: getConfigValue('commit-user', 'guardian-ci'),
-		commitEmail: getConfigValue(
+		pullRequestAuthor: getConfigValueOrDefault('pr-author', 'guardian-ci'),
+		pullRequestPrefix: getConfigValueOrDefault(
+			'pr-prefix',
+			'chore(release):',
+		),
+		releaseBranch: getConfigValueOrDefault('release-branch', 'main'),
+		newBranchPrefix: getConfigValueOrDefault('branch-prefix', 'release-'),
+		commitUser: getConfigValueOrDefault('commit-user', 'guardian-ci'),
+		commitEmail: getConfigValueOrDefault(
 			'commit-email',
 			'guardian-ci@users.noreply.github.com',
 		),
