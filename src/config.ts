@@ -52,7 +52,46 @@ const getFileChangesConfig = (): FileChangesConfig => {
 
 const getAdditionalChanges = (): FileChanges => {
 	const additionalChanges = getConfigValue('additional-changes', '{}');
-	return JSON.parse(additionalChanges) as FileChanges;
+
+	return parseAdditionalChanges(additionalChanges);
+};
+
+export const parseAdditionalChanges = (
+	additionalChanges: string,
+): FileChanges => {
+	if (!additionalChanges || additionalChanges === '{}') {
+		return {};
+	}
+
+	let json;
+	try {
+		// eslint-disable-next-line prefer-const -- this is setting the value above so I don't know what eslint is complaining about
+		json = JSON.parse(additionalChanges) as FileChanges;
+	} catch (err) {
+		throw new Error('Invalid JSON provided for additional-changes input');
+	}
+
+	if (json !== Object(json) || Array.isArray(json)) {
+		throw new Error('additional-changes value must be an object');
+	}
+
+	for (const changes of Object.values(json)) {
+		if (!Array.isArray(changes)) {
+			throw new Error(
+				'values in additional-changes object must be arrays',
+			);
+		}
+
+		for (const change of changes) {
+			if (typeof change !== 'string') {
+				throw new Error(
+					'values in additional-changes object must be strings',
+				);
+			}
+		}
+	}
+
+	return json;
 };
 
 export const getConfig = (): Config => {

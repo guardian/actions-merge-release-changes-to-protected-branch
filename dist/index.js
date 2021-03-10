@@ -6965,7 +6965,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getConfig = void 0;
+exports.getConfig = exports.parseAdditionalChanges = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const versionBumpChange = ['-  "version": "', '+  "version": "'];
 const packageManagerConfig = {
@@ -6992,8 +6992,36 @@ const getFileChangesConfig = () => {
 };
 const getAdditionalChanges = () => {
     const additionalChanges = getConfigValue('additional-changes', '{}');
-    return JSON.parse(additionalChanges);
+    return exports.parseAdditionalChanges(additionalChanges);
 };
+const parseAdditionalChanges = (additionalChanges) => {
+    if (!additionalChanges || additionalChanges === '{}') {
+        return {};
+    }
+    let json;
+    try {
+        // eslint-disable-next-line prefer-const -- this is setting the value above so I don't know what eslint is complaining about
+        json = JSON.parse(additionalChanges);
+    }
+    catch (err) {
+        throw new Error('Invalid JSON provided for additional-changes input');
+    }
+    if (json !== Object(json) || Array.isArray(json)) {
+        throw new Error('additional-changes value must be an object');
+    }
+    for (const changes of Object.values(json)) {
+        if (!Array.isArray(changes)) {
+            throw new Error('values in additional-changes object must be arrays');
+        }
+        for (const change of changes) {
+            if (typeof change !== 'string') {
+                throw new Error('values in additional-changes object must be strings');
+            }
+        }
+    }
+    return json;
+};
+exports.parseAdditionalChanges = parseAdditionalChanges;
 const getConfig = () => {
     return Object.assign(Object.assign({}, getFileChangesConfig()), { pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'), releaseBranch: getConfigValue('release-branch', 'main'), newBranchPrefix: getConfigValue('branch-prefix', 'release-'), commitUser: getConfigValue('commit-user', 'guardian-ci'), commitEmail: getConfigValue('commit-email', 'guardian-ci@users.noreply.github.com') });
 };
