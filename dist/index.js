@@ -7054,6 +7054,17 @@ const decideAndTriggerAction = (config) => {
             throw new Error(`Unknown eventName: ${eventName}`);
     }
 };
+const decideMergeMethod = (repository) => {
+    if (repository.allow_squash_merge) {
+        return 'squash';
+    }
+    else if (repository.allow_rebase_merge) {
+        return 'rebase';
+    }
+    else {
+        return 'merge';
+    }
+};
 const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, void 0, function* () {
     core.debug('checkApproveAndMergePR');
     core.debug(`Pull request: ${payload.pull_request.number}`);
@@ -7104,7 +7115,7 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         return;
     }
     core.info(`PR mergeable. Merging`);
-    yield octokit.pulls.merge(prData);
+    yield octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: decideMergeMethod(payload.repository) }));
 });
 const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0, function* () {
     core.debug('checkAndReleaseLibrary');
