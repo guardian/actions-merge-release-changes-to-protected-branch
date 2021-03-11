@@ -6940,6 +6940,184 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 7672:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.decideMergeMethod = exports.decideAndTriggerAction = void 0;
+const core_1 = __nccwpck_require__(2186);
+const exec_1 = __nccwpck_require__(1514);
+const github_1 = __nccwpck_require__(5438);
+const utils_1 = __nccwpck_require__(1314);
+const decideAndTriggerAction = (config) => {
+    var _a;
+    const eventName = github_1.context.eventName;
+    const payload = github_1.context.payload;
+    core_1.debug(`Event name: ${eventName}`);
+    core_1.debug(`Action type: ${(_a = payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
+    switch (eventName) {
+        case 'push':
+            return checkAndPRChanges(payload, config);
+        case 'pull_request':
+            return checkApproveAndMergePR(payload, config);
+        default:
+            throw new Error(`Unknown eventName: ${eventName}`);
+    }
+};
+exports.decideAndTriggerAction = decideAndTriggerAction;
+const decideMergeMethod = (repository) => {
+    if (repository.allow_merge_commit) {
+        return 'merge';
+    }
+    if (repository.allow_squash_merge) {
+        return 'squash';
+    }
+    if (repository.allow_rebase_merge) {
+        return 'rebase';
+    }
+    return 'merge';
+};
+exports.decideMergeMethod = decideMergeMethod;
+const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, void 0, function* () {
+    core_1.debug('checkApproveAndMergePR');
+    core_1.debug(`Pull request: ${payload.pull_request.number}`);
+    const prData = {
+        owner: payload.repository.owner.login,
+        repo: payload.repository.name,
+        pull_number: payload.pull_request.number,
+    };
+    const token = core_1.getInput('github-token', { required: true });
+    const octokit = github_1.getOctokit(token);
+    // PR information isn't necessarily up to date in webhook payload
+    // Get PR from the API to be sure
+    const { data: pullRequest } = yield octokit.pulls.get(prData);
+    core_1.info(`Checking PR meets conditions`);
+    if (!pullRequest.user ||
+        pullRequest.user.login !== config.pullRequestAuthor) {
+        core_1.info(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
+        return;
+    }
+    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
+        core_1.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
+        return;
+    }
+    const allowedFiles = Object.keys(config.expectedChanges);
+    const expectedFilesChanges = allowedFiles.length;
+    // Although part of this case would be caught implicity by the following checks
+    // checking it at this stage means that we can fail early and avoid
+    // calling the listFiles endpoint
+    // This check does also catch the case when not as many changes as expected
+    // are made
+    if (pullRequest.changed_files !== expectedFilesChanges) {
+        throw new Error(`Pull request changes ${pullRequest.changed_files} ${utils_1.maybePluralise({
+            number: pullRequest.changed_files,
+            singular: 'file',
+            plural: 'files',
+        })}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
+    }
+    const { data: files } = yield octokit.pulls.listFiles(prData);
+    for (const file of files) {
+        if (!allowedFiles.includes(file.filename)) {
+            throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
+        }
+        const expectedChanges = config.expectedChanges[file.filename];
+        if (file.changes !== expectedChanges.length) {
+            throw new Error(`${file.changes} ${utils_1.maybePluralise({
+                number: file.changes,
+                singular: 'change',
+                plural: 'changes',
+            })} in file: ${file.filename}. Expected ${expectedChanges.length} ${utils_1.maybePluralise({
+                number: expectedChanges.length,
+                singular: 'change',
+                plural: 'changes',
+            })}`);
+        }
+        if (file.patch) {
+            for (const change of expectedChanges) {
+                if (!file.patch.includes(change)) {
+                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}\n\nPR Diff: ${file.patch}`);
+                }
+            }
+        }
+    }
+    core_1.info(`Conditions met. Approving.`);
+    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/actions-merge-release-changes-to-protected-branch' }));
+    core_1.info(`Checking if PR is mergeable`);
+    if (!pullRequest.mergeable) {
+        core_1.info(`Pull request is not mergeable, exiting.`);
+        return;
+    }
+    core_1.info(`PR mergeable. Merging`);
+    yield octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: exports.decideMergeMethod(payload.pull_request.base.repo) }));
+});
+const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0, function* () {
+    core_1.debug('checkAndReleaseLibrary');
+    const token = core_1.getInput('github-token', { required: true });
+    if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
+        core_1.info(`Push is not to ${config.releaseBranch}, ignoring`);
+        return;
+    }
+    const ret = yield exec_1.exec('git diff --quiet', [], {
+        ignoreReturnCode: true,
+    });
+    if (!ret) {
+        core_1.info('New release not created. No further action needed.');
+        return;
+    }
+    core_1.info('Diff detected. Opening pull request');
+    core_1.startGroup('Getting version');
+    let output = '';
+    yield exec_1.exec('cat package.json', [], {
+        listeners: {
+            stdout: (data) => {
+                output += data.toString();
+            },
+        },
+    });
+    const newVersion = JSON.parse(output).version;
+    core_1.endGroup();
+    if (!newVersion) {
+        throw new Error('Could not find version number');
+    }
+    core_1.startGroup('Commiting changes');
+    const message = `${config.pullRequestPrefix} ${newVersion}`;
+    const newBranch = `${config.newBranchPrefix}${newVersion}`;
+    yield exec_1.exec(`git config --global user.email "${config.commitEmail}"`);
+    yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
+    yield exec_1.exec(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
+    yield exec_1.exec(`git checkout -b "${newBranch}"`);
+    yield exec_1.exec(`git add package.json`);
+    yield exec_1.exec(`git add package-lock.json`);
+    yield exec_1.exec(`git commit -m "${message}"`);
+    yield exec_1.exec(`git status`);
+    yield exec_1.exec(`git push -u origin "${newBranch}"`);
+    core_1.endGroup();
+    const octokit = github_1.getOctokit(token);
+    core_1.info('Creating pull request');
+    yield octokit.pulls.create({
+        owner: payload.repository.owner.login,
+        repo: payload.repository.name,
+        title: message,
+        body: `Updating the version number in the repository following the release of v${newVersion}`,
+        base: config.releaseBranch,
+        head: newBranch,
+    });
+});
+
+
+/***/ }),
+
 /***/ 6373:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -7018,25 +7196,6 @@ exports.getConfig = getConfig;
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -7047,173 +7206,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
-const exec_1 = __nccwpck_require__(1514);
-const github = __importStar(__nccwpck_require__(5438));
+const core_1 = __nccwpck_require__(2186);
 const config_1 = __nccwpck_require__(6373);
-const utils_1 = __nccwpck_require__(1314);
-const decideAndTriggerAction = (config) => {
-    var _a;
-    const eventName = github.context.eventName;
-    const payload = github.context.payload;
-    core.debug(`Event name: ${eventName}`);
-    core.debug(`Action type: ${(_a = payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
-    switch (eventName) {
-        case 'push':
-            return checkAndPRChanges(payload, config);
-        case 'pull_request':
-            return checkApproveAndMergePR(payload, config);
-        default:
-            throw new Error(`Unknown eventName: ${eventName}`);
-    }
-};
-const decideMergeMethod = (repository) => {
-    if (repository.allow_merge_commit) {
-        return 'merge';
-    }
-    if (repository.allow_squash_merge) {
-        return 'squash';
-    }
-    if (repository.allow_rebase_merge) {
-        return 'rebase';
-    }
-    return 'merge';
-};
-const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, void 0, function* () {
-    core.debug('checkApproveAndMergePR');
-    core.debug(`Pull request: ${payload.pull_request.number}`);
-    const prData = {
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        pull_number: payload.pull_request.number,
-    };
-    const token = core.getInput('github-token', { required: true });
-    const octokit = github.getOctokit(token);
-    // PR information isn't necessarily up to date in webhook payload
-    // Get PR from the API to be sure
-    const { data: pullRequest } = yield octokit.pulls.get(prData);
-    core.info(`Checking PR meets conditions`);
-    if (!pullRequest.user ||
-        pullRequest.user.login !== config.pullRequestAuthor) {
-        core.info(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
-        return;
-    }
-    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
-        core.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
-        return;
-    }
-    const allowedFiles = Object.keys(config.expectedChanges);
-    const expectedFilesChanges = allowedFiles.length;
-    // Although part of this case would be caught implicity by the following checks
-    // checking it at this stage means that we can fail early and avoid
-    // calling the listFiles endpoint
-    // This check does also catch the case when not as many changes as expected
-    // are made
-    if (pullRequest.changed_files !== expectedFilesChanges) {
-        throw new Error(`Pull request changes ${pullRequest.changed_files} ${utils_1.maybePluralise({
-            number: pullRequest.changed_files,
-            singular: 'file',
-            plural: 'files',
-        })}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
-    }
-    const { data: files } = yield octokit.pulls.listFiles(prData);
-    for (const file of files) {
-        if (!allowedFiles.includes(file.filename)) {
-            throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
-        }
-        const expectedChanges = config.expectedChanges[file.filename];
-        if (file.changes !== expectedChanges.length) {
-            throw new Error(`${file.changes} ${utils_1.maybePluralise({
-                number: file.changes,
-                singular: 'change',
-                plural: 'changes',
-            })} in file: ${file.filename}. Expected ${expectedChanges.length} ${utils_1.maybePluralise({
-                number: expectedChanges.length,
-                singular: 'change',
-                plural: 'changes',
-            })}`);
-        }
-        if (file.patch) {
-            for (const change of expectedChanges) {
-                if (!file.patch.includes(change)) {
-                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}\n\nPR Diff: ${file.patch}`);
-                }
-            }
-        }
-    }
-    core.info(`Conditions met. Approving.`);
-    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: 'Approved automatically by the @guardian/actions-merge-release-changes-to-protected-branch' }));
-    core.info(`Checking if PR is mergeable`);
-    if (!pullRequest.mergeable) {
-        core.info(`Pull request is not mergeable, exiting.`);
-        return;
-    }
-    core.info(`PR mergeable. Merging`);
-    yield octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: decideMergeMethod(payload.pull_request.base.repo) }));
-});
-const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0, function* () {
-    core.debug('checkAndReleaseLibrary');
-    const token = core.getInput('github-token', { required: true });
-    if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
-        core.info(`Push is not to ${config.releaseBranch}, ignoring`);
-        return;
-    }
-    const ret = yield exec_1.exec('git diff --quiet', [], {
-        ignoreReturnCode: true,
-    });
-    if (!ret) {
-        core.info('New release not created. No further action needed.');
-        return;
-    }
-    core.info('Diff detected. Opening pull request');
-    core.startGroup('Getting version');
-    let output = '';
-    yield exec_1.exec('cat package.json', [], {
-        listeners: {
-            stdout: (data) => {
-                output += data.toString();
-            },
-        },
-    });
-    const newVersion = JSON.parse(output).version;
-    core.endGroup();
-    if (!newVersion) {
-        throw new Error('Could not find version number');
-    }
-    core.startGroup('Commiting changes');
-    const message = `${config.pullRequestPrefix} ${newVersion}`;
-    const newBranch = `${config.newBranchPrefix}${newVersion}`;
-    yield exec_1.exec(`git config --global user.email "${config.commitEmail}"`);
-    yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
-    yield exec_1.exec(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
-    yield exec_1.exec(`git checkout -b "${newBranch}"`);
-    yield exec_1.exec(`git add package.json`);
-    yield exec_1.exec(`git add package-lock.json`);
-    yield exec_1.exec(`git commit -m "${message}"`);
-    yield exec_1.exec(`git status`);
-    yield exec_1.exec(`git push -u origin "${newBranch}"`);
-    core.endGroup();
-    const octokit = github.getOctokit(token);
-    core.info('Creating pull request');
-    yield octokit.pulls.create({
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        title: message,
-        body: `Updating the version number in the repository following the release of v${newVersion}`,
-        base: config.releaseBranch,
-        head: newBranch,
-    });
-});
+const action_1 = __nccwpck_require__(7672);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.info('Running @guardian/actions-merge-release-changes-to-protected-branch');
+            core_1.info('Running @guardian/actions-merge-release-changes-to-protected-branch');
             const config = config_1.getConfig();
-            yield decideAndTriggerAction(config);
+            yield action_1.decideAndTriggerAction(config);
         }
         catch (error) {
             if (error instanceof Error) {
-                core.setFailed(error.message);
+                core_1.setFailed(error.message);
             }
             else {
                 throw error;
