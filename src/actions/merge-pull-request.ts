@@ -1,35 +1,13 @@
-import { info, debug, getInput, startGroup, endGroup } from '@actions/core';
-import { exec } from '@actions/exec';
-import { context, getOctokit } from '@actions/github';
-import type {
+import { debug, getInput, info } from '@actions/core';
+import { getOctokit } from '@actions/github';
+import {
 	PullRequestEvent,
-	PushEvent,
 	Repository,
 } from '@octokit/webhooks-definitions/schema';
-import type { Config } from './config';
-import { maybePluralise } from './utils';
+import { Config } from '../config';
+import { maybePluralise } from '../utils';
 
-interface Package {
-	version?: string;
-}
-
-export const decideAndTriggerAction = (config: Config) => {
-	const eventName = context.eventName;
-	const payload = context.payload;
-	debug(`Event name: ${eventName}`);
-	debug(`Action type: ${payload.action ?? 'Unknown'}`);
-
-	switch (eventName) {
-		case 'push':
-			return checkAndPRChanges(payload as PushEvent, config);
-		case 'pull_request':
-			return checkApproveAndMergePR(payload as PullRequestEvent, config);
-		default:
-			throw new Error(`Unknown eventName: ${eventName}`);
-	}
-};
-
-export const decideMergeMethod = (
+const decideMergeMethod = (
 	repository: Repository,
 ): 'merge' | 'squash' | 'rebase' => {
 	if (repository.allow_merge_commit) {
@@ -47,7 +25,7 @@ export const decideMergeMethod = (
 	return 'merge';
 };
 
-const checkApproveAndMergePR = async (
+export const mergePullRequest = async (
 	payload: PullRequestEvent,
 	config: Config,
 ) => {
@@ -166,76 +144,5 @@ const checkApproveAndMergePR = async (
 	await octokit.pulls.merge({
 		...prData,
 		merge_method: decideMergeMethod(payload.pull_request.base.repo),
-	});
-};
-
-const checkAndPRChanges = async (payload: PushEvent, config: Config) => {
-	debug('checkAndReleaseLibrary');
-	const token = getInput('github-token', { required: true });
-
-	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
-		info(`Push is not to ${config.releaseBranch}, ignoring`);
-		return;
-	}
-
-	const ret = await exec('git diff --quiet', [], {
-		ignoreReturnCode: true,
-	});
-
-	if (!ret) {
-		info('New release not created. No further action needed.');
-		return;
-	}
-
-	info('Diff detected. Opening pull request');
-
-	startGroup('Getting version');
-	let output = '';
-	await exec('cat package.json', [], {
-		listeners: {
-			stdout: (data: Buffer) => {
-				output += data.toString();
-			},
-		},
-	});
-
-	const newVersion = ((JSON.parse(output) as unknown) as Package).version;
-
-	endGroup();
-
-	if (!newVersion) {
-		throw new Error('Could not find version number');
-	}
-
-	startGroup('Commiting changes');
-
-	const message = `${config.pullRequestPrefix} ${newVersion}`;
-	const newBranch = `${config.newBranchPrefix}${newVersion}`;
-
-	await exec(`git config --global user.email "${config.commitEmail}"`);
-	await exec(`git config --global user.name "${config.commitUser}"`);
-	await exec(
-		`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`,
-	);
-
-	await exec(`git checkout -b "${newBranch}"`);
-	await exec(`git add package.json`);
-	await exec(`git add package-lock.json`);
-	await exec(`git commit -m "${message}"`);
-	await exec(`git status`);
-	await exec(`git push -u origin "${newBranch}"`);
-
-	endGroup();
-
-	const octokit = getOctokit(token);
-
-	info('Creating pull request');
-	await octokit.pulls.create({
-		owner: payload.repository.owner.login,
-		repo: payload.repository.name,
-		title: message,
-		body: `Updating the version number in the repository following the release of v${newVersion}`,
-		base: config.releaseBranch,
-		head: newBranch,
 	});
 };

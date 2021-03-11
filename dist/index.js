@@ -7209,10 +7209,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __nccwpck_require__(2186);
 const config_1 = __nccwpck_require__(6373);
 const action_1 = __nccwpck_require__(7672);
+const path_1 = __nccwpck_require__(5622);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core_1.info('Running @guardian/actions-merge-release-changes-to-protected-branch');
+            core_1.info(`Running ${__nccwpck_require__(306)/* .name */ .u2}`);
             const config = config_1.getConfig();
             yield action_1.decideAndTriggerAction(config);
         }
@@ -7251,6 +7252,14 @@ exports.maybePluralise = maybePluralise;
 
 module.exports = eval("require")("encoding");
 
+
+/***/ }),
+
+/***/ 306:
+/***/ ((module) => {
+
+"use strict";
+module.exports = JSON.parse("{\"u2\":\"@guardian/actions-merge-release-changes-to-protected-branch\"}");
 
 /***/ }),
 
