@@ -4,6 +4,7 @@ import * as github from '@actions/github';
 import type {
 	PullRequestEvent,
 	PushEvent,
+	Repository,
 } from '@octokit/webhooks-definitions/schema';
 import type { Config } from './config';
 import { getConfig } from './config';
@@ -26,6 +27,24 @@ const decideAndTriggerAction = (config: Config) => {
 		default:
 			throw new Error(`Unknown eventName: ${eventName}`);
 	}
+};
+
+const decideMergeMethod = (
+	repository: Repository,
+): 'merge' | 'squash' | 'rebase' => {
+	if (repository.allow_merge_commit) {
+		return 'merge';
+	}
+
+	if (repository.allow_squash_merge) {
+		return 'squash';
+	}
+
+	if (repository.allow_rebase_merge) {
+		return 'rebase';
+	}
+
+	return 'merge';
 };
 
 const checkApproveAndMergePR = async (
@@ -118,7 +137,10 @@ const checkApproveAndMergePR = async (
 
 	core.info(`PR mergeable. Merging`);
 
-	await octokit.pulls.merge(prData);
+	await octokit.pulls.merge({
+		...prData,
+		merge_method: decideMergeMethod(payload.pull_request.base.repo),
+	});
 };
 
 const checkAndPRChanges = async (payload: PushEvent, config: Config) => {
