@@ -6976,7 +6976,7 @@ const packageManagerConfig = {
     },
     yarn: {
         maxFilesChanged: 1,
-        maxFileChanges: 1,
+        maxFileChanges: 2,
         allowedFiles: ['package.json'],
         expectedChanges: ['-  "version": "', '+  "version": "'],
     },
@@ -7098,7 +7098,7 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
             throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${config.allowedFiles.join(', ')}`);
         }
         if (file.changes > config.maxFileChanges) {
-            throw new Error(`More than ${config.maxFileChanges} in file: ${file.filename}`);
+            throw new Error(`More than ${config.maxFileChanges} change(s) in file: ${file.filename}`);
         }
         if (file.patch) {
             for (const change of config.expectedChanges) {
