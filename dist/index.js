@@ -7154,8 +7154,9 @@ const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0,
     yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
     yield exec_1.exec(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
     yield exec_1.exec(`git checkout -b "${newBranch}"`);
-    yield exec_1.exec(`git add package.json`);
-    yield exec_1.exec(`git add package-lock.json`);
+    for (const file of config.allowedFiles) {
+        yield exec_1.exec(`git add ${file}`);
+    }
     yield exec_1.exec(`git commit -m "${message}"`);
     yield exec_1.exec(`git status`);
     yield exec_1.exec(`git push -u origin "${newBranch}"`);
