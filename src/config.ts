@@ -24,7 +24,7 @@ const packageManagerConfig: Record<string, PackageManagerConfig> = {
 	},
 	yarn: {
 		maxFilesChanged: 1,
-		maxFileChanges: 1,
+		maxFileChanges: 2,
 		allowedFiles: ['package.json'],
 		expectedChanges: ['-  "version": "', '+  "version": "'],
 	},

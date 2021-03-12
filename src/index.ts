@@ -106,7 +106,7 @@ const checkApproveAndMergePR = async (
 
 		if (file.changes > config.maxFileChanges) {
 			throw new Error(
-				`More than ${config.maxFileChanges} in file: ${file.filename}`,
+				`More than ${config.maxFileChanges} change(s) in file: ${file.filename}`,
 			);
 		}
 
