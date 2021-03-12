@@ -40,7 +40,7 @@ export const raisePullRequest = async ({
 
 	/*************************************/
 
-	info('Changes detected. Opening pull request');
+	info('Changes detected. Creating pull request');
 
 	/*************************************/
 
@@ -86,7 +86,7 @@ export const raisePullRequest = async ({
 
 	/*************************************/
 
-	info('Creating pull request');
+	info('Opening pull request');
 
 	/*************************************/
 
