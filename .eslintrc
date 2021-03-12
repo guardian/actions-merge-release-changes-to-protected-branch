@@ -1,14 +1,16 @@
 {
 	"root": true,
 	"env": {
-		"node": true,
-		"jest/globals": true
+		"node": true
 	},
 	"extends": "@guardian/eslint-config",
 	"overrides": [
 		{
 			"files": ["*.ts", "*.tsx"],
-			"extends": "@guardian/eslint-config-typescript"
+			"extends": "@guardian/eslint-config-typescript",
+			"rules": {
+				"@typescript-eslint/no-var-requires": "off" // it's node
+			}
 		}
 	]
 }

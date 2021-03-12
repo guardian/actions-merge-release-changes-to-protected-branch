@@ -1,32 +1,54 @@
-import { setFailed, info, debug } from '@actions/core';
-import { getConfig } from './config';
-import { raisePullRequest } from './actions/raise-pull-request';
-import { resolve } from 'path';
+import { debug, info, setFailed } from '@actions/core';
 import { context } from '@actions/github';
-import {
+import type {
 	PullRequestEvent,
 	PushEvent,
 } from '@octokit/webhooks-definitions/schema';
 import { mergePullRequest } from './actions/merge-pull-request';
+import { raisePullRequest } from './actions/raise-pull-request';
+import { validatePullRequest } from './actions/validate-pull-request';
+import { getConfig } from './config';
+import { octokit } from './lib/github';
+import { name } from './lib/pkg';
+
+export type PRData = { owner: string; repo: string; pull_number: number };
 
 async function run(): Promise<void> {
 	try {
-		info(`Running ${require(resolve(process.cwd(), 'package.json')).name}`);
+		info(`Running ${name}`);
+
+		debug(`Event name: ${context.eventName}`);
+		debug(`Action type: ${context.payload.action ?? 'Unknown'}`);
+
 		const config = getConfig();
 
-		const eventName = context.eventName;
-		debug(`Event name: ${eventName}`);
+		switch (context.eventName) {
+			case 'push': {
+				const payload = context.payload as PushEvent;
+				await raisePullRequest({ payload, config });
+				break;
+			}
 
-		const payload = context.payload;
-		debug(`Action type: ${payload.action ?? 'Unknown'}`);
+			case 'pull_request': {
+				const payload = context.payload as PullRequestEvent;
+				const prData: PRData = {
+					owner: payload.repository.owner.login,
+					repo: payload.repository.name,
+					pull_number: payload.pull_request.number,
+				};
 
-		switch (eventName) {
-			case 'push':
-				return raisePullRequest(payload as PushEvent, config);
-			case 'pull_request':
-				return mergePullRequest(payload as PullRequestEvent, config);
+				// PR information isn't necessarily up to date in webhook payload
+				// Get PR from the API to be sure
+				const { data: pullRequest } = await octokit.pulls.get(prData);
+				debug(`Pull request: ${payload.pull_request.number}`);
+
+				await validatePullRequest({ pullRequest, prData, config });
+				await mergePullRequest({ pullRequest, prData, payload });
+				break;
+			}
+
 			default:
-				throw new Error(`Unknown eventName: ${eventName}`);
+				throw new Error(`Unknown eventName: ${context.eventName}`);
 		}
 	} catch (error) {
 		if (error instanceof Error) {

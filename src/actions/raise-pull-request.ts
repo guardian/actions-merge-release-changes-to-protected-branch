@@ -1,34 +1,51 @@
-import { info, debug, getInput, startGroup, endGroup } from '@actions/core';
+import { debug, endGroup, info, startGroup } from '@actions/core';
 import { exec } from '@actions/exec';
-import { getOctokit } from '@actions/github';
 import type { PushEvent } from '@octokit/webhooks-definitions/schema';
+import type { PackageJson } from 'type-fest';
 import type { Config } from '../config';
+import { octokit, token } from '../lib/github';
 
-interface Package {
-	version?: string;
+interface Props {
+	payload: PushEvent;
+	config: Config;
 }
 
-export const raisePullRequest = async (payload: PushEvent, config: Config) => {
+export const raisePullRequest = async ({
+	payload,
+	config,
+}: Props): Promise<void> => {
 	debug('checkAndReleaseLibrary');
-	const token = getInput('github-token', { required: true });
+
+	/*************************************/
+
+	info('Checking for a release branch');
 
 	if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
 		info(`Push is not to ${config.releaseBranch}, ignoring`);
 		return;
 	}
 
-	const ret = await exec('git diff --quiet', [], {
-		ignoreReturnCode: true,
-	});
+	/*************************************/
 
-	if (!ret) {
+	info('Checking changes');
+
+	if (
+		!(await exec('git diff --quiet', [], {
+			ignoreReturnCode: true,
+		}))
+	) {
 		info('New release not created. No further action needed.');
 		return;
 	}
 
-	info('Diff detected. Opening pull request');
+	/*************************************/
 
-	startGroup('Getting version');
+	info('Changes detected. Opening pull request');
+
+	/*************************************/
+
+	startGroup('Getting new package version');
+
 	let output = '';
 	await exec('cat package.json', [], {
 		listeners: {
@@ -38,15 +55,17 @@ export const raisePullRequest = async (payload: PushEvent, config: Config) => {
 		},
 	});
 
-	const newVersion = ((JSON.parse(output) as unknown) as Package).version;
-
-	endGroup();
+	const { version: newVersion } = JSON.parse(output) as PackageJson;
 
 	if (!newVersion) {
 		throw new Error('Could not find version number');
 	}
 
-	startGroup('Commiting changes');
+	endGroup();
+
+	/*************************************/
+
+	startGroup('Committing changes');
 
 	const message = `${config.pullRequestPrefix} ${newVersion}`;
 	const newBranch = `${config.newBranchPrefix}${newVersion}`;
@@ -56,7 +75,6 @@ export const raisePullRequest = async (payload: PushEvent, config: Config) => {
 	await exec(
 		`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`,
 	);
-
 	await exec(`git checkout -b "${newBranch}"`);
 	await exec(`git add package.json`);
 	await exec(`git add package-lock.json`);
@@ -66,9 +84,12 @@ export const raisePullRequest = async (payload: PushEvent, config: Config) => {
 
 	endGroup();
 
-	const octokit = getOctokit(token);
+	/*************************************/
 
 	info('Creating pull request');
+
+	/*************************************/
+
 	await octokit.pulls.create({
 		owner: payload.repository.owner.login,
 		repo: payload.repository.name,
