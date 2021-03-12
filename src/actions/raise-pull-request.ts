@@ -14,7 +14,7 @@ export const raisePullRequest = async ({
 	payload,
 	config,
 }: Props): Promise<void> => {
-	debug('checkAndReleaseLibrary');
+	debug('raisePullRequest');
 
 	/*************************************/
 
