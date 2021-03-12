@@ -7010,7 +7010,7 @@ const core_1 = __nccwpck_require__(2186);
 const exec_1 = __nccwpck_require__(1514);
 const github_1 = __nccwpck_require__(3933);
 const raisePullRequest = ({ payload, config, }) => __awaiter(void 0, void 0, void 0, function* () {
-    core_1.debug('checkAndReleaseLibrary');
+    core_1.debug('raisePullRequest');
     /*************************************/
     core_1.info('Checking for a release branch');
     if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
@@ -7026,7 +7026,7 @@ const raisePullRequest = ({ payload, config, }) => __awaiter(void 0, void 0, voi
         return;
     }
     /*************************************/
-    core_1.info('Changes detected. Opening pull request');
+    core_1.info('Changes detected. Creating pull request');
     /*************************************/
     core_1.startGroup('Getting new package version');
     let output = '';
@@ -7057,7 +7057,7 @@ const raisePullRequest = ({ payload, config, }) => __awaiter(void 0, void 0, voi
     yield exec_1.exec(`git push -u origin "${newBranch}"`);
     core_1.endGroup();
     /*************************************/
-    core_1.info('Creating pull request');
+    core_1.info('Opening pull request');
     /*************************************/
     yield github_1.octokit.pulls.create({
         owner: payload.repository.owner.login,
@@ -7249,47 +7249,49 @@ const validate_pull_request_1 = __nccwpck_require__(5327);
 const config_1 = __nccwpck_require__(6373);
 const github_2 = __nccwpck_require__(3933);
 const pkg_1 = __nccwpck_require__(1971);
-const run = () => __awaiter(void 0, void 0, void 0, function* () {
+function run() {
     var _a;
-    try {
-        core_1.info(`Running ${pkg_1.name}`);
-        core_1.debug(`Event name: ${github_1.context.eventName}`);
-        core_1.debug(`Action type: ${(_a = github_1.context.payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
-        const config = config_1.getConfig();
-        switch (github_1.context.eventName) {
-            case 'push': {
-                const payload = github_1.context.payload;
-                yield raise_pull_request_1.raisePullRequest({ payload, config });
-                break;
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            core_1.info(`Running ${pkg_1.name}`);
+            core_1.debug(`Event name: ${github_1.context.eventName}`);
+            core_1.debug(`Action type: ${(_a = github_1.context.payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
+            const config = config_1.getConfig();
+            switch (github_1.context.eventName) {
+                case 'push': {
+                    const payload = github_1.context.payload;
+                    yield raise_pull_request_1.raisePullRequest({ payload, config });
+                    break;
+                }
+                case 'pull_request': {
+                    const payload = github_1.context.payload;
+                    const prData = {
+                        owner: payload.repository.owner.login,
+                        repo: payload.repository.name,
+                        pull_number: payload.pull_request.number,
+                    };
+                    // PR information isn't necessarily up to date in webhook payload
+                    // Get PR from the API to be sure
+                    const { data: pullRequest } = yield github_2.octokit.pulls.get(prData);
+                    core_1.debug(`Pull request: ${payload.pull_request.number}`);
+                    yield validate_pull_request_1.validatePullRequest({ pullRequest, prData, config });
+                    yield merge_pull_request_1.mergePullRequest({ pullRequest, prData, payload });
+                    break;
+                }
+                default:
+                    throw new Error(`Unknown eventName: ${github_1.context.eventName}`);
             }
-            case 'pull_request': {
-                const payload = github_1.context.payload;
-                const prData = {
-                    owner: payload.repository.owner.login,
-                    repo: payload.repository.name,
-                    pull_number: payload.pull_request.number,
-                };
-                // PR information isn't necessarily up to date in webhook payload
-                // Get PR from the API to be sure
-                const { data: pullRequest } = yield github_2.octokit.pulls.get(prData);
-                core_1.debug(`Pull request: ${payload.pull_request.number}`);
-                yield validate_pull_request_1.validatePullRequest({ pullRequest, prData, config });
-                yield merge_pull_request_1.mergePullRequest({ pullRequest, prData, payload });
-                break;
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                core_1.setFailed(error.message);
             }
-            default:
-                throw new Error(`Unknown eventName: ${github_1.context.eventName}`);
+            else {
+                throw error;
+            }
         }
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            core_1.setFailed(error.message);
-        }
-        else {
-            throw error;
-        }
-    }
-});
+    });
+}
 void run();
 
 
