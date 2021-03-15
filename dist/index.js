@@ -6940,6 +6940,30 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 8088:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getMergeMethod = void 0;
+const getMergeMethod = (repository) => {
+    if (repository.allow_merge_commit) {
+        return 'merge';
+    }
+    if (repository.allow_squash_merge) {
+        return 'squash';
+    }
+    if (repository.allow_rebase_merge) {
+        return 'rebase';
+    }
+    return 'merge';
+};
+exports.getMergeMethod = getMergeMethod;
+
+
+/***/ }),
+
 /***/ 441:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -6959,18 +6983,7 @@ exports.mergePullRequest = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(3933);
 const pkg_1 = __nccwpck_require__(1971);
-const getMergeMethod = (repository) => {
-    if (repository.allow_merge_commit) {
-        return 'merge';
-    }
-    if (repository.allow_squash_merge) {
-        return 'squash';
-    }
-    if (repository.allow_rebase_merge) {
-        return 'rebase';
-    }
-    return 'merge';
-};
+const get_merge_method_1 = __nccwpck_require__(8088);
 const mergePullRequest = ({ pullRequest, prData, payload, }) => __awaiter(void 0, void 0, void 0, function* () {
     core_1.debug('mergePullRequest');
     /*************************************/
@@ -6983,7 +6996,7 @@ const mergePullRequest = ({ pullRequest, prData, payload, }) => __awaiter(void 0
     }
     /*************************************/
     core_1.info(`Merging pull request`);
-    yield github_1.octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: getMergeMethod(payload.pull_request.base.repo) }));
+    yield github_1.octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: get_merge_method_1.getMergeMethod(payload.pull_request.base.repo) }));
 });
 exports.mergePullRequest = mergePullRequest;
 
