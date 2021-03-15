@@ -7,6 +7,7 @@ import type {
 import type { PRData } from '../index';
 import { octokit } from '../lib/github';
 import { name } from '../lib/pkg';
+import { getMergeMethod } from './get-merge-method';
 
 interface Props {
 	pullRequest: GetResponseDataTypeFromEndpointMethod<
@@ -15,24 +16,6 @@ interface Props {
 	prData: PRData;
 	payload: PullRequestEvent;
 }
-
-const getMergeMethod = (
-	repository: Repository,
-): 'merge' | 'squash' | 'rebase' => {
-	if (repository.allow_merge_commit) {
-		return 'merge';
-	}
-
-	if (repository.allow_squash_merge) {
-		return 'squash';
-	}
-
-	if (repository.allow_rebase_merge) {
-		return 'rebase';
-	}
-
-	return 'merge';
-};
 
 export const mergePullRequest = async ({
 	pullRequest,

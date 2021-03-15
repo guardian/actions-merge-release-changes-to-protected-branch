@@ -1,10 +1,10 @@
-import { Repository } from '@octokit/webhooks-definitions/schema';
-import { decideMergeMethod } from './action';
+import type { Repository } from '@octokit/webhooks-definitions/schema';
+import { getMergeMethod } from './get-merge-method';
 
-describe('The decideMergeMethod function', () => {
+describe('The getMergeMethod function', () => {
 	it('returns merge if merge commits are allowed', () => {
 		expect(
-			decideMergeMethod(({
+			getMergeMethod(({
 				allow_merge_commit: true,
 				allow_rebase_merge: true,
 				allow_squash_merge: true,
@@ -14,7 +14,7 @@ describe('The decideMergeMethod function', () => {
 
 	it("returns squash if squash commits are allowed and merge commits aren't", () => {
 		expect(
-			decideMergeMethod(({
+			getMergeMethod(({
 				allow_merge_commit: false,
 				allow_rebase_merge: true,
 				allow_squash_merge: true,
@@ -24,7 +24,7 @@ describe('The decideMergeMethod function', () => {
 
 	it('returns rebase if rebase commits are allowed and merge and squash are not', () => {
 		expect(
-			decideMergeMethod(({
+			getMergeMethod(({
 				allow_merge_commit: false,
 				allow_rebase_merge: true,
 				allow_squash_merge: false,
@@ -34,7 +34,7 @@ describe('The decideMergeMethod function', () => {
 
 	it('returns merge if no methods are allowed', () => {
 		expect(
-			decideMergeMethod(({
+			getMergeMethod(({
 				allow_merge_commit: false,
 				allow_rebase_merge: false,
 				allow_squash_merge: false,
