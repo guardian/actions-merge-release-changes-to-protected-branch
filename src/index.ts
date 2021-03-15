@@ -106,7 +106,7 @@ const checkApproveAndMergePR = async (
 
 		if (file.changes > config.maxFileChanges) {
 			throw new Error(
-				`More than ${config.maxFileChanges} in file: ${file.filename}`,
+				`More than ${config.maxFileChanges} change(s) in file: ${file.filename}`,
 			);
 		}
 
@@ -193,8 +193,11 @@ const checkAndPRChanges = async (payload: PushEvent, config: Config) => {
 	);
 
 	await exec(`git checkout -b "${newBranch}"`);
-	await exec(`git add package.json`);
-	await exec(`git add package-lock.json`);
+
+	for (const file of config.allowedFiles) {
+		await exec(`git add ${file}`);
+	}
+
 	await exec(`git commit -m "${message}"`);
 	await exec(`git status`);
 	await exec(`git push -u origin "${newBranch}"`);
