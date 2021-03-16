@@ -7094,7 +7094,7 @@ exports.raisePullRequest = raisePullRequest;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.shouldMergePullRequest = void 0;
 const core_1 = __nccwpck_require__(2186);
-const shouldMergePullRequest = ({ pullRequest, config }) => {
+const shouldMergePullRequest = ({ pullRequest, config, }) => {
     core_1.info('Checking pull request is valid');
     if (!pullRequest.user ||
         pullRequest.user.login !== config.pullRequestAuthor) {
