@@ -24,20 +24,26 @@
     "@octokit/types": "^6.12.2",
     "@octokit/webhooks-definitions": "^3.62.5",
     "@types/jest": "^26.0.20",
-    "@types/node": "^14.14.32",
-    "@typescript-eslint/eslint-plugin": "^4.16.1",
-    "@typescript-eslint/parser": "^4.15.0",
+    "@types/node": "^14.14.34",
+    "@typescript-eslint/eslint-plugin": "^4.17.0",
+    "@typescript-eslint/parser": "^4.17.0",
     "@vercel/ncc": "^0.27.0",
     "eslint": "^7.21.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jest": "^24.1.9",
+    "eslint-plugin-jest": "^24.3.1",
     "eslint-plugin-prettier": "^3.3.1",
     "jest": "^26.6.3",
+    "husky": "^4.3.8",
     "prettier": "^2.2.1",
     "ts-jest": "^26.5.3",
     "type-fest": "^0.21.3",
     "typescript": "^4.2.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run build && git add dist/"
+    }
   }
 }

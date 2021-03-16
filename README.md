@@ -30,6 +30,8 @@ There are two steps in the process, both handled by this action:
 1. If a merge to main results in a new publish, commit the changes to `package.json` and `package-lock.json` and open a new PR for them
 2. If a new PR is opened, check if it a version bump PR and, if it is, approve it and merge it
 
+Note that the merge step assumes that the status checks have already passed, that the configured approver meets any codeowner requirements and that there are no other requirements before merging. The action will attempt to merge the PR immediately after approving it so any unmet conditions will cause the process to fail. If there are any other requirements, these can be addressed in a job in the CI workflow which is added to the `needs` value of the approve and merge job. See the `Approve and merge PR` section for [an example of the `needs` value](#approve-and-merge-pr).
+
 In order to run these steps, two workflow files are required in your project.
 
 #### **Open PR**
@@ -264,6 +266,7 @@ We follow the [script/task](https://github.com/github/scripts-to-rule-them-all) 
 -   `./script/setup` to install dependencies
 -   `./script/lint` to lint the code using ESLint
 -   `./script/build` to compile TypeScript to JS
+-   `./script/test` to run the test suite
 
 There are also some other commands defined in package.json:
 

@@ -76,8 +76,11 @@ export const raisePullRequest = async ({
 		`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`,
 	);
 	await exec(`git checkout -b "${newBranch}"`);
-	await exec(`git add package.json`);
-	await exec(`git add package-lock.json`);
+
+	for (const file of Object.keys(config.expectedChanges)) {
+		await exec(`git add ${file}`);
+	}
+
 	await exec(`git commit -m "${message}"`);
 	await exec(`git status`);
 	await exec(`git push -u origin "${newBranch}"`);

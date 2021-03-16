@@ -7063,8 +7063,9 @@ const raisePullRequest = ({ payload, config, }) => __awaiter(void 0, void 0, voi
     yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
     yield exec_1.exec(`git remote set-url origin "https://git:${github_1.token}@github.com/${payload.repository.full_name}.git"`);
     yield exec_1.exec(`git checkout -b "${newBranch}"`);
-    yield exec_1.exec(`git add package.json`);
-    yield exec_1.exec(`git add package-lock.json`);
+    for (const file of Object.keys(config.expectedChanges)) {
+        yield exec_1.exec(`git add ${file}`);
+    }
     yield exec_1.exec(`git commit -m "${message}"`);
     yield exec_1.exec(`git status`);
     yield exec_1.exec(`git push -u origin "${newBranch}"`);
