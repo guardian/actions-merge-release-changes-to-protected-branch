@@ -29,7 +29,7 @@ const packageManagerConfig: Record<string, FileChanges> = {
 
 const allowedPackageManagerValues = Object.keys(packageManagerConfig);
 
-export const getConfigValueOrDefault = (key: string, d: string) => {
+export const getConfigValueOrDefault = (key: string, d: string): string => {
 	const input = getInput(key);
 
 	return input && input !== '' ? input : d;

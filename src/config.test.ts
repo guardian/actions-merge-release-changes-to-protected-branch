@@ -1,9 +1,9 @@
+import { getInput } from '@actions/core';
 import {
-	parseAdditionalChanges,
 	getConfigValueOrDefault,
 	getFileChangesConfig,
+	parseAdditionalChanges,
 } from './config';
-import { getInput, InputOptions } from '@actions/core';
 
 jest.mock('@actions/core');
 
@@ -87,13 +87,11 @@ describe('The getFileChangesConfig function', () => {
 	});
 
 	it('merges package manager and additional changes', () => {
-		mockGetInput.mockImplementation(
-			(name: string, options?: InputOptions): string => {
-				return name === 'package-manager'
-					? 'npm'
-					: '{"README.md": ["one"]}';
-			},
-		);
+		mockGetInput.mockImplementation((name: string): string => {
+			return name === 'package-manager'
+				? 'npm'
+				: '{"README.md": ["one"]}';
+		});
 		expect(getFileChangesConfig()).toEqual({
 			expectedChanges: {
 				'package.json': ['-  "version": "', '+  "version": "'],

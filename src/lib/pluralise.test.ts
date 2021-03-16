@@ -1,9 +1,9 @@
-import { maybePluralise } from './utils';
+import { pluralise } from './pluralise';
 
-describe('The maybePluralise function', () => {
+describe('The pluralise function', () => {
 	it('returns the singlur value if the number is 1', () => {
 		expect(
-			maybePluralise({
+			pluralise({
 				number: 1,
 				singular: 'singular',
 				plural: 'plural',
@@ -13,7 +13,7 @@ describe('The maybePluralise function', () => {
 
 	it('returns the plural value if the number is greater than 1', () => {
 		expect(
-			maybePluralise({
+			pluralise({
 				number: 2,
 				singular: 'singular',
 				plural: 'plural',
@@ -23,7 +23,7 @@ describe('The maybePluralise function', () => {
 
 	it('returns the plural value if the number is 0', () => {
 		expect(
-			maybePluralise({
+			pluralise({
 				number: 0,
 				singular: 'singular',
 				plural: 'plural',
