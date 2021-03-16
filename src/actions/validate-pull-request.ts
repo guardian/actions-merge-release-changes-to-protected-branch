@@ -1,4 +1,4 @@
-import { debug, info } from '@actions/core';
+import { debug } from '@actions/core';
 import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 import type { Config } from '../config';
 import type { PRData } from '../index';

@@ -1,4 +1,3 @@
-import type { InputOptions } from '@actions/core';
 import { getInput } from '@actions/core';
 import {
 	getConfigValueOrDefault,
@@ -88,13 +87,11 @@ describe('The getFileChangesConfig function', () => {
 	});
 
 	it('merges package manager and additional changes', () => {
-		mockGetInput.mockImplementation(
-			(name: string, options?: InputOptions): string => {
-				return name === 'package-manager'
-					? 'npm'
-					: '{"README.md": ["one"]}';
-			},
-		);
+		mockGetInput.mockImplementation((name: string): string => {
+			return name === 'package-manager'
+				? 'npm'
+				: '{"README.md": ["one"]}';
+		});
 		expect(getFileChangesConfig()).toEqual({
 			expectedChanges: {
 				'package.json': ['-  "version": "', '+  "version": "'],

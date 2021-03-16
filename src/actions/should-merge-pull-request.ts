@@ -1,7 +1,7 @@
 import { info } from '@actions/core';
-import { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
-import { Config } from '../config';
-import { octokit } from '../lib/github';
+import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
+import type { Config } from '../config';
+import type { octokit } from '../lib/github';
 
 interface Props {
 	pullRequest: GetResponseDataTypeFromEndpointMethod<
@@ -10,7 +10,10 @@ interface Props {
 	config: Config;
 }
 
-export const shouldMergePullRequest = ({ pullRequest, config }: Props) => {
+export const shouldMergePullRequest = ({
+	pullRequest,
+	config,
+}: Props): boolean => {
 	info('Checking pull request is valid');
 
 	if (
