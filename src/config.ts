@@ -29,15 +29,13 @@ const packageManagerConfig: Record<string, FileChanges> = {
 
 const allowedPackageManagerValues = Object.keys(packageManagerConfig);
 
-export const getConfigValueOrDefault = (key: string, d: string): string => {
+const getConfigValueOrDefault = (key: string, d: string): string => {
 	const input = getInput(key);
 
 	return input && input !== '' ? input : d;
 };
 
-export const parseAdditionalChanges = (
-	additionalChanges: string,
-): FileChanges => {
+const parseAdditionalChanges = (additionalChanges: string): FileChanges => {
 	if (!additionalChanges || additionalChanges === '{}') {
 		return {};
 	}
@@ -73,7 +71,7 @@ export const parseAdditionalChanges = (
 	return json;
 };
 
-export const getFileChangesConfig = (): FileChangesConfig => {
+const getFileChangesConfig = (): FileChangesConfig => {
 	const pm = getConfigValueOrDefault('package-manager', 'npm');
 
 	if (!allowedPackageManagerValues.includes(pm)) {
@@ -113,4 +111,10 @@ export const getConfig = (): Config => {
 			'guardian-ci@users.noreply.github.com',
 		),
 	};
+};
+
+export const _ = {
+	getConfigValueOrDefault,
+	getFileChangesConfig,
+	parseAdditionalChanges,
 };

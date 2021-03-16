@@ -7193,7 +7193,7 @@ exports._ = { validateFiles };
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getConfig = exports.getFileChangesConfig = exports.parseAdditionalChanges = exports.getConfigValueOrDefault = void 0;
+exports._ = exports.getConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
 const versionBumpChange = ['-  "version": "', '+  "version": "'];
 const packageManagerConfig = {
@@ -7210,7 +7210,6 @@ const getConfigValueOrDefault = (key, d) => {
     const input = core_1.getInput(key);
     return input && input !== '' ? input : d;
 };
-exports.getConfigValueOrDefault = getConfigValueOrDefault;
 const parseAdditionalChanges = (additionalChanges) => {
     if (!additionalChanges || additionalChanges === '{}') {
         return {};
@@ -7238,24 +7237,27 @@ const parseAdditionalChanges = (additionalChanges) => {
     }
     return json;
 };
-exports.parseAdditionalChanges = parseAdditionalChanges;
 const getFileChangesConfig = () => {
-    const pm = exports.getConfigValueOrDefault('package-manager', 'npm');
+    const pm = getConfigValueOrDefault('package-manager', 'npm');
     if (!allowedPackageManagerValues.includes(pm)) {
         throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
     }
     const pmChanges = packageManagerConfig[pm];
     return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };
 };
-exports.getFileChangesConfig = getFileChangesConfig;
 const getAdditionalChanges = () => {
-    const additionalChanges = exports.getConfigValueOrDefault('additional-changes', '{}');
-    return exports.parseAdditionalChanges(additionalChanges);
+    const additionalChanges = getConfigValueOrDefault('additional-changes', '{}');
+    return parseAdditionalChanges(additionalChanges);
 };
 const getConfig = () => {
-    return Object.assign(Object.assign({}, exports.getFileChangesConfig()), { pullRequestAuthor: exports.getConfigValueOrDefault('pr-author', 'guardian-ci'), pullRequestPrefix: exports.getConfigValueOrDefault('pr-prefix', 'chore(release):'), releaseBranch: exports.getConfigValueOrDefault('release-branch', 'main'), newBranchPrefix: exports.getConfigValueOrDefault('branch-prefix', 'release-'), commitUser: exports.getConfigValueOrDefault('commit-user', 'guardian-ci'), commitEmail: exports.getConfigValueOrDefault('commit-email', 'guardian-ci@users.noreply.github.com') });
+    return Object.assign(Object.assign({}, getFileChangesConfig()), { pullRequestAuthor: getConfigValueOrDefault('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValueOrDefault('pr-prefix', 'chore(release):'), releaseBranch: getConfigValueOrDefault('release-branch', 'main'), newBranchPrefix: getConfigValueOrDefault('branch-prefix', 'release-'), commitUser: getConfigValueOrDefault('commit-user', 'guardian-ci'), commitEmail: getConfigValueOrDefault('commit-email', 'guardian-ci@users.noreply.github.com') });
 };
 exports.getConfig = getConfig;
+exports._ = {
+    getConfigValueOrDefault,
+    getFileChangesConfig,
+    parseAdditionalChanges,
+};
 
 
 /***/ }),
