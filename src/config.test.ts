@@ -1,9 +1,10 @@
+import type { InputOptions } from '@actions/core';
+import { getInput } from '@actions/core';
 import {
-	parseAdditionalChanges,
 	getConfigValueOrDefault,
 	getFileChangesConfig,
+	parseAdditionalChanges,
 } from './config';
-import { getInput, InputOptions } from '@actions/core';
 
 jest.mock('@actions/core');
 

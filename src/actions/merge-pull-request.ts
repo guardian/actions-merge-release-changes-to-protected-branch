@@ -1,9 +1,6 @@
 import { debug, info } from '@actions/core';
 import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
-import type {
-	PullRequestEvent,
-	Repository,
-} from '@octokit/webhooks-definitions/schema';
+import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
 import type { PRData } from '../index';
 import { octokit } from '../lib/github';
 import { name } from '../lib/pkg';

@@ -20,27 +20,6 @@ export const validatePullRequest = async ({
 }: Props): Promise<void> => {
 	debug('validatePullRequest');
 
-	info('Checking pull request is valid');
-
-	/*************************************/
-
-	if (
-		!pullRequest.user ||
-		pullRequest.user.login !== config.pullRequestAuthor
-	) {
-		info(
-			`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`,
-		);
-		return;
-	}
-
-	if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
-		info(
-			`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`,
-		);
-		return;
-	}
-
 	/*************************************/
 
 	const allowedFiles = Object.keys(config.expectedChanges);

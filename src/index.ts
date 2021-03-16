@@ -6,6 +6,7 @@ import type {
 } from '@octokit/webhooks-definitions/schema';
 import { mergePullRequest } from './actions/merge-pull-request';
 import { raisePullRequest } from './actions/raise-pull-request';
+import { shouldMergePullRequest } from './actions/should-merge-pull-request';
 import { validatePullRequest } from './actions/validate-pull-request';
 import { getConfig } from './config';
 import { octokit } from './lib/github';
@@ -42,8 +43,11 @@ async function run(): Promise<void> {
 				const { data: pullRequest } = await octokit.pulls.get(prData);
 				debug(`Pull request: ${payload.pull_request.number}`);
 
-				await validatePullRequest({ pullRequest, prData, config });
-				await mergePullRequest({ pullRequest, prData, payload });
+				if (shouldMergePullRequest({ pullRequest, config })) {
+					await validatePullRequest({ pullRequest, prData, config });
+					await mergePullRequest({ pullRequest, prData, payload });
+				}
+
 				break;
 			}
 
