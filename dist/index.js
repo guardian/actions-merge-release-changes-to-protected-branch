@@ -7086,6 +7086,32 @@ exports.raisePullRequest = raisePullRequest;
 
 /***/ }),
 
+/***/ 7062:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.shouldMergePullRequest = void 0;
+const core_1 = __nccwpck_require__(2186);
+const shouldMergePullRequest = ({ pullRequest, config }) => {
+    core_1.info('Checking pull request is valid');
+    if (!pullRequest.user ||
+        pullRequest.user.login !== config.pullRequestAuthor) {
+        core_1.info(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
+        return false;
+    }
+    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
+        core_1.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
+        return false;
+    }
+    return true;
+};
+exports.shouldMergePullRequest = shouldMergePullRequest;
+
+
+/***/ }),
+
 /***/ 5327:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -7107,17 +7133,6 @@ const github_1 = __nccwpck_require__(3933);
 const pluralise_1 = __nccwpck_require__(2090);
 const validatePullRequest = ({ pullRequest, config, prData, }) => __awaiter(void 0, void 0, void 0, function* () {
     core_1.debug('validatePullRequest');
-    core_1.info('Checking pull request is valid');
-    /*************************************/
-    if (!pullRequest.user ||
-        pullRequest.user.login !== config.pullRequestAuthor) {
-        core_1.info(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
-        return;
-    }
-    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
-        core_1.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
-        return;
-    }
     /*************************************/
     const allowedFiles = Object.keys(config.expectedChanges);
     const expectedFilesChanges = allowedFiles.length;
@@ -7258,6 +7273,7 @@ const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const merge_pull_request_1 = __nccwpck_require__(441);
 const raise_pull_request_1 = __nccwpck_require__(3115);
+const should_merge_pull_request_1 = __nccwpck_require__(7062);
 const validate_pull_request_1 = __nccwpck_require__(5327);
 const config_1 = __nccwpck_require__(6373);
 const github_2 = __nccwpck_require__(3933);
@@ -7287,8 +7303,10 @@ function run() {
                     // Get PR from the API to be sure
                     const { data: pullRequest } = yield github_2.octokit.pulls.get(prData);
                     core_1.debug(`Pull request: ${payload.pull_request.number}`);
-                    yield validate_pull_request_1.validatePullRequest({ pullRequest, prData, config });
-                    yield merge_pull_request_1.mergePullRequest({ pullRequest, prData, payload });
+                    if (should_merge_pull_request_1.shouldMergePullRequest({ pullRequest, config })) {
+                        yield validate_pull_request_1.validatePullRequest({ pullRequest, prData, config });
+                        yield merge_pull_request_1.mergePullRequest({ pullRequest, prData, payload });
+                    }
                     break;
                 }
                 default:
