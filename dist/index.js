@@ -7127,7 +7127,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validatePullRequest = void 0;
+exports._ = exports.validatePullRequest = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(3933);
 const pluralise_1 = __nccwpck_require__(2090);
@@ -7151,6 +7151,11 @@ const validatePullRequest = ({ pullRequest, config, prData, }) => __awaiter(void
     }
     /*************************************/
     const { data: files } = yield github_1.octokit.pulls.listFiles(prData);
+    validateFiles({ files, config });
+});
+exports.validatePullRequest = validatePullRequest;
+const validateFiles = ({ files, config }) => {
+    const allowedFiles = Object.keys(config.expectedChanges);
     for (const file of files) {
         if (!allowedFiles.includes(file.filename)) {
             throw new Error(`Disallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
@@ -7167,7 +7172,7 @@ const validatePullRequest = ({ pullRequest, config, prData, }) => __awaiter(void
                 plural: 'changes',
             })}`);
         }
-        if (file.patch) {
+        if (typeof file.patch !== 'undefined') {
             for (const change of expectedChanges) {
                 if (!file.patch.includes(change)) {
                     throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}\n\nPR Diff: ${file.patch}`);
@@ -7175,8 +7180,8 @@ const validatePullRequest = ({ pullRequest, config, prData, }) => __awaiter(void
             }
         }
     }
-});
-exports.validatePullRequest = validatePullRequest;
+};
+exports._ = { validateFiles };
 
 
 /***/ }),

@@ -13,6 +13,13 @@ interface Props {
 	prData: PRData;
 }
 
+interface ValidateFileProps {
+	files: GetResponseDataTypeFromEndpointMethod<
+		typeof octokit.pulls.listFiles
+	>;
+	config: Config;
+}
+
 export const validatePullRequest = async ({
 	pullRequest,
 	config,
@@ -48,6 +55,12 @@ export const validatePullRequest = async ({
 
 	const { data: files } = await octokit.pulls.listFiles(prData);
 
+	validateFiles({ files, config });
+};
+
+const validateFiles = ({ files, config }: ValidateFileProps): void => {
+	const allowedFiles = Object.keys(config.expectedChanges);
+
 	for (const file of files) {
 		if (!allowedFiles.includes(file.filename)) {
 			throw new Error(
@@ -75,7 +88,7 @@ export const validatePullRequest = async ({
 			);
 		}
 
-		if (file.patch) {
+		if (typeof file.patch !== 'undefined') {
 			for (const change of expectedChanges) {
 				if (!file.patch.includes(change)) {
 					throw new Error(
@@ -86,3 +99,5 @@ export const validatePullRequest = async ({
 		}
 	}
 };
+
+export const _ = { validateFiles };
