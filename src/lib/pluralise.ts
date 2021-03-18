@@ -1,4 +1,4 @@
-export const maybePluralise = ({
+export const pluralise = ({
 	number,
 	singular,
 	plural,

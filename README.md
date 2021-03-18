@@ -266,6 +266,7 @@ We follow the [script/task](https://github.com/github/scripts-to-rule-them-all) 
 -   `./script/setup` to install dependencies
 -   `./script/lint` to lint the code using ESLint
 -   `./script/build` to compile TypeScript to JS
+-   `./script/test` to run the test suite
 
 There are also some other commands defined in package.json:
 
