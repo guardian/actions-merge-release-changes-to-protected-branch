@@ -119,16 +119,29 @@ Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other work
 
 ### Inputs
 
-| Name            | Description                                                                             | Required | Default                              |
-| --------------- | --------------------------------------------------------------------------------------- | -------- | ------------------------------------ |
-| github-token    | A GitHub token to complete the required actions                                         | true     | -                                    |
-| package-manager | The name of the package manager used: npm, yarn                                         | false    | npm                                  |
-| pr-author       | The author of version bump PRs                                                          | false    | guardian-ci                          |
-| pr-prefix       | The prefix to add to version bump PRs (note that a space will be added after the value) | false    | chore(release):                      |
-| release-branch  | The branch which releases are run from                                                  | false    | main                                 |
-| branch-prefix   | The prefix to add to the branch name to commit version bump changes to                  | false    | release-                             |
-| commit-user     | The username of the user to commit version bump changes with                            | false    | guardian-ci                          |
-| commit-email    | The email of the user to commit version bump changes with                               | false    | guardian-ci@users.noreply.github.com |
+| Name               | Description                                                                                                                                                                                                                                                        | Required | Default                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------ |
+| github-token       | A GitHub token to complete the required actions                                                                                                                                                                                                                    | true     | -                                    |
+| package-manager    | The name of the package manager used: npm, yarn                                                                                                                                                                                                                    | false    | npm                                  |
+| additional-changes | A JSON object of additional changes where the key is a filename and the value is an array of acceptable changes in that file e.g. `{"README.md": ["- \"version\": \"", "+ \"version\": \""]}` (see [validating changes](#validating-changes) for more information) | false    | {}                                   |
+| pr-author          | The author of version bump PRs                                                                                                                                                                                                                                     | false    | guardian-ci                          |
+| pr-prefix          | The prefix to add to version bump PRs (note that a space will be added after the value)                                                                                                                                                                            | false    | chore(release):                      |
+| release-branch     | The branch which releases are run from                                                                                                                                                                                                                             | false    | main                                 |
+| branch-prefix      | The prefix to add to the branch name to commit version bump changes to                                                                                                                                                                                             | false    | release-                             |
+| commit-user        | The username of the user to commit version bump changes with                                                                                                                                                                                                       | false    | guardian-ci                          |
+| commit-email       | The email of the user to commit version bump changes with                                                                                                                                                                                                          | false    | guardian-ci@users.noreply.github.com |
+
+### Validating Changes
+
+In order to be sure that the PR being approved automatically is limited in scope to the expected changes in a release, the action performs so checks against the PR diff. These checks simply verify that a number of pre-configured strings are present in the diff.
+
+For example, the diff for a version bump in the `package.json` might look something like this. By default, this action will verify that both `- \"version\": \"` and `+ \"version\": \"` appear in this diff.
+
+```
+"@@ -1,6 +1,6 @@\n {\n   \"name\": \"my-library\",\n-  \"version\": \"1.0.0\",\n+  \"version\": \"1.0.1\",\n   \"description\": \"This is a test library\",\n   \"main\": \"lib/index.js\","
+```
+
+The expected changes values provided through the `additional-changes` input are verified in the same way.
 
 ### Repository Settings
 

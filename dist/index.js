@@ -6965,20 +6965,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getConfig = void 0;
+exports.getConfig = exports.parseAdditionalChanges = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const versionBumpChange = ['-  "version": "', '+  "version": "'];
 const packageManagerConfig = {
     npm: {
-        maxFilesChanged: 2,
-        maxFileChanges: 2,
-        allowedFiles: ['package.json', 'package-lock.json'],
-        expectedChanges: ['-  "version": "', '+  "version": "'],
+        'package.json': versionBumpChange,
+        'package-lock.json': versionBumpChange,
     },
     yarn: {
-        maxFilesChanged: 1,
-        maxFileChanges: 2,
-        allowedFiles: ['package.json'],
-        expectedChanges: ['-  "version": "', '+  "version": "'],
+        'package.json': versionBumpChange,
     },
 };
 const allowedPackageManagerValues = Object.keys(packageManagerConfig);
@@ -6986,15 +6982,48 @@ const getConfigValue = (key, d) => {
     const input = core.getInput(key);
     return input && input !== '' ? input : d;
 };
-const getPackageManagerConfig = () => {
+const getFileChangesConfig = () => {
     const pm = getConfigValue('package-manager', 'npm');
     if (!allowedPackageManagerValues.includes(pm)) {
         throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
     }
-    return packageManagerConfig[pm];
+    const pmChanges = packageManagerConfig[pm];
+    return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };
 };
+const getAdditionalChanges = () => {
+    const additionalChanges = getConfigValue('additional-changes', '{}');
+    return exports.parseAdditionalChanges(additionalChanges);
+};
+const parseAdditionalChanges = (additionalChanges) => {
+    if (!additionalChanges || additionalChanges === '{}') {
+        return {};
+    }
+    let json;
+    try {
+        // eslint-disable-next-line prefer-const -- this is setting the value above so I don't know what eslint is complaining about
+        json = JSON.parse(additionalChanges);
+    }
+    catch (err) {
+        throw new Error('Invalid JSON provided for additional-changes input');
+    }
+    if (json !== Object(json) || Array.isArray(json)) {
+        throw new Error('additional-changes value must be an object');
+    }
+    for (const changes of Object.values(json)) {
+        if (!Array.isArray(changes)) {
+            throw new Error('values in additional-changes object must be arrays');
+        }
+        for (const change of changes) {
+            if (typeof change !== 'string') {
+                throw new Error('values in additional-changes object must be strings');
+            }
+        }
+    }
+    return json;
+};
+exports.parseAdditionalChanges = parseAdditionalChanges;
 const getConfig = () => {
-    return Object.assign(Object.assign({}, getPackageManagerConfig()), { pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'), releaseBranch: getConfigValue('release-branch', 'main'), newBranchPrefix: getConfigValue('branch-prefix', 'release-'), commitUser: getConfigValue('commit-user', 'guardian-ci'), commitEmail: getConfigValue('commit-email', 'guardian-ci@users.noreply.github.com') });
+    return Object.assign(Object.assign({}, getFileChangesConfig()), { pullRequestAuthor: getConfigValue('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValue('pr-prefix', 'chore(release):'), releaseBranch: getConfigValue('release-branch', 'main'), newBranchPrefix: getConfigValue('branch-prefix', 'release-'), commitUser: getConfigValue('commit-user', 'guardian-ci'), commitEmail: getConfigValue('commit-email', 'guardian-ci@users.noreply.github.com') });
 };
 exports.getConfig = getConfig;
 
@@ -7039,6 +7068,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
 const github = __importStar(__nccwpck_require__(5438));
 const config_1 = __nccwpck_require__(6373);
+const utils_1 = __nccwpck_require__(1314);
 const decideAndTriggerAction = (config) => {
     var _a;
     const eventName = github.context.eventName;
@@ -7089,21 +7119,41 @@ const checkApproveAndMergePR = (payload, config) => __awaiter(void 0, void 0, vo
         core.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
         return;
     }
-    if (pullRequest.changed_files > config.maxFilesChanged) {
-        throw new Error(`Pull request changes more than ${config.maxFilesChanged} files.`);
+    const allowedFiles = Object.keys(config.expectedChanges);
+    const expectedFilesChanges = allowedFiles.length;
+    // Although part of this case would be caught implicity by the following checks
+    // checking it at this stage means that we can fail early and avoid
+    // calling the listFiles endpoint
+    // This check does also catch the case when not as many changes as expected
+    // are made
+    if (pullRequest.changed_files !== expectedFilesChanges) {
+        throw new Error(`Pull request changes ${pullRequest.changed_files} ${utils_1.maybePluralise({
+            number: pullRequest.changed_files,
+            singular: 'file',
+            plural: 'files',
+        })}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
     }
     const { data: files } = yield octokit.pulls.listFiles(prData);
     for (const file of files) {
-        if (!config.allowedFiles.includes(file.filename)) {
-            throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${config.allowedFiles.join(', ')}`);
+        if (!allowedFiles.includes(file.filename)) {
+            throw new Error(`Unallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
         }
-        if (file.changes > config.maxFileChanges) {
-            throw new Error(`More than ${config.maxFileChanges} change(s) in file: ${file.filename}`);
+        const expectedChanges = config.expectedChanges[file.filename];
+        if (file.changes !== expectedChanges.length) {
+            throw new Error(`${file.changes} ${utils_1.maybePluralise({
+                number: file.changes,
+                singular: 'change',
+                plural: 'changes',
+            })} in file: ${file.filename}. Expected ${expectedChanges.length} ${utils_1.maybePluralise({
+                number: expectedChanges.length,
+                singular: 'change',
+                plural: 'changes',
+            })}`);
         }
         if (file.patch) {
-            for (const change of config.expectedChanges) {
+            for (const change of expectedChanges) {
                 if (!file.patch.includes(change)) {
-                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}`);
+                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}\n\nPR Diff: ${file.patch}`);
                 }
             }
         }
@@ -7154,7 +7204,7 @@ const checkAndPRChanges = (payload, config) => __awaiter(void 0, void 0, void 0,
     yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
     yield exec_1.exec(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
     yield exec_1.exec(`git checkout -b "${newBranch}"`);
-    for (const file of config.allowedFiles) {
+    for (const file of Object.keys(config.expectedChanges)) {
         yield exec_1.exec(`git add ${file}`);
     }
     yield exec_1.exec(`git commit -m "${message}"`);
@@ -7190,6 +7240,21 @@ function run() {
     });
 }
 void run();
+
+
+/***/ }),
+
+/***/ 1314:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.maybePluralise = void 0;
+const maybePluralise = ({ number, singular, plural, }) => {
+    return number === 1 ? singular : plural;
+};
+exports.maybePluralise = maybePluralise;
 
 
 /***/ }),
