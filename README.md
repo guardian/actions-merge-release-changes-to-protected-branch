@@ -1,7 +1,5 @@
 # @guardian/actions-merge-release-changes-to-protected-branch
 
-**This project is still a WIP and should not be used on any production repositories**
-
 ## Contents
 
 -   [What?](#what)
