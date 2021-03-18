@@ -61,7 +61,7 @@ jobs:
                   NPM_TOKEN: ${{ secrets.GU_NPM_TOKEN }}
               run: npm run release
             - name: Validate and open PR
-              uses: guardian/actions-merge-release-changes-to-protected-branch@main
+              uses: guardian/actions-merge-release-changes-to-protected-branch@v1.0.0
               with:
                   github-token: ${{ secrets.GU_GITHUB_TOKEN }}
 ```
@@ -79,7 +79,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Validate and approve release PRs
-              uses: guardian/actions-merge-release-changes-to-protected-branch@main
+              uses: guardian/actions-merge-release-changes-to-protected-branch@v1.0.0
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -106,7 +106,7 @@ jobs:
         needs: [ci]
         steps:
             - name: Validate, approve and merge release PRs
-              uses: guardian/actions-merge-release-changes-to-protected-branch@main
+              uses: guardian/actions-merge-release-changes-to-protected-branch@v1.0.0
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -272,3 +272,7 @@ There are also some other commands defined in package.json:
 -   `npm run prettier:check` and `npm run prettier:fix` to check and format the code using Prettier
 
 However, it's advised you configure your IDE to format on save to avoid horrible "correct linting" commits.
+
+### Releasing
+
+GitHub actions are pulled from the repository at the point they are used. This can be done from a branch, a specific commit or, most commonly, a tag. The recommended method for consuming this action is to install via a tag. When new changes are made a new tag should be published. This can be done from a developer machine using the `git tag` command (e.g. `git tag -a v1.0.1`) and then pushed using `git push --tags`. Before pushing a new `major` version tag, first create and push a new branch for the current major version (e.g. `git checkout -b release/v1 && git push`). This allows for easier maintainence of old versions. Note that previous major versions should only receive patch updates.
