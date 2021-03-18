@@ -7162,6 +7162,9 @@ const validateFiles = ({ files, config }) => {
             throw new Error(`Disallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
         }
         const expectedChanges = config.expectedChanges[file.filename];
+        if (expectedChanges === '*') {
+            continue;
+        }
         if (file.changes !== expectedChanges.length) {
             throw new Error(`${file.changes} ${pluralise_1.pluralise({
                 number: file.changes,
@@ -7226,8 +7229,9 @@ const parseAdditionalChanges = (additionalChanges) => {
         throw new Error('additional-changes value must be an object');
     }
     for (const changes of Object.values(json)) {
-        if (!Array.isArray(changes)) {
-            throw new Error('values in additional-changes object must be arrays');
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Typescript thinks this has to be true but we're parsing JSON so let's make sure
+        if (!Array.isArray(changes) && changes !== '*') {
+            throw new Error('values in additional-changes object must be arrays or "*"');
         }
         for (const change of changes) {
             if (typeof change !== 'string') {

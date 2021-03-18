@@ -82,4 +82,51 @@ describe('The validateFiles function', () => {
 		] as Files;
 		expect(() => _.validateFiles({ config, files })).not.toThrowError();
 	});
+
+	it('should allow any changes if the allowed value is *', () => {
+		const config = ({
+			expectedChanges: {
+				'package.json': ['-  "version": "', '+  "version": "'],
+				'package-lock.json': '*',
+			},
+		} as unknown) as Config;
+
+		const files = [
+			{
+				filename: 'package.json',
+				changes: 2,
+				patch: '-  "version": " +  "version": "',
+			},
+			{
+				filename: 'package-lock.json',
+				changes: 4,
+				patch: 'patch',
+			},
+		] as Files;
+		expect(() => _.validateFiles({ config, files })).not.toThrowError();
+	});
+
+	it('should still error for unexpected file changes if value is *', () => {
+		const config = ({
+			expectedChanges: {
+				'package-lock.json': '*',
+			},
+		} as unknown) as Config;
+
+		const files = [
+			{
+				filename: 'package.json',
+				changes: 2,
+				patch: '-  "version": " +  "version": "',
+			},
+			{
+				filename: 'package-lock.json',
+				changes: 4,
+				patch: 'patch',
+			},
+		] as Files;
+		expect(() => _.validateFiles({ config, files })).toThrowError(
+			'Disallowed file (package.json) changed. Allowed files are: package-lock.json',
+		);
+	});
 });

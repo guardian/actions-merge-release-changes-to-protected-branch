@@ -9,7 +9,7 @@ export interface Config extends FileChangesConfig {
 	commitEmail: string;
 }
 
-type FileChanges = Record<string, string[]>;
+type FileChanges = Record<string, string[] | '*'>;
 
 interface FileChangesConfig {
 	expectedChanges: FileChanges;
@@ -53,9 +53,10 @@ const parseAdditionalChanges = (additionalChanges: string): FileChanges => {
 	}
 
 	for (const changes of Object.values(json)) {
-		if (!Array.isArray(changes)) {
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Typescript thinks this has to be true but we're parsing JSON so let's make sure
+		if (!Array.isArray(changes) && changes !== '*') {
 			throw new Error(
-				'values in additional-changes object must be arrays',
+				'values in additional-changes object must be arrays or "*"',
 			);
 		}
 
