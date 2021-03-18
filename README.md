@@ -9,6 +9,7 @@
     -   [Inputs](#inputs)
     -   [Repository Settings](#repository-settings)
     -   [Configuring Releases](#configuring-releases)
+    -   [Example](#example)
 -   [Development](#development)
     -   [Build](#build)
     -   [Scripts](#scripts)
@@ -250,6 +251,10 @@ When using commit messages to determine the new version, it is possible to eithe
 To aid the process of crafting confirming commit messages, tools such as [commitizen](https://github.com/commitizen/cz-cli) can be used. This presents a command line interface at the point of comitting to craft commits following convention.
 
 Alongside this, it would be worthwhile adding a process to verify that either at least one or all of the commits in a pull request conform to the spec depending on the strategy being employed. No tools of this nature have been used by the authors of this action to date and so no recommendations are made here. Contribtuions from those who have experience in this area are welcome.
+
+### Example
+
+The [guardian/simple-ts-test](https://github.com/guardian/simple-ts-test) repository is used to test this action and therefore provides a working example of the action _in_ action.
 
 ## Development
 
