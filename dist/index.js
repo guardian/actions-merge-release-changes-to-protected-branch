@@ -7079,6 +7079,7 @@ const getNewVersionFromPackageJson = () => {
         if (!version) {
             throw new Error('Could not find version number in package.json');
         }
+        core_1.info(`New version is: ${version}`);
         return version;
     }
     catch (e) {

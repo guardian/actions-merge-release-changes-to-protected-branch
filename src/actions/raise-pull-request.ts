@@ -97,6 +97,8 @@ const getNewVersionFromPackageJson = (): string => {
 			throw new Error('Could not find version number in package.json');
 		}
 
+		info(`New version is: ${version}`);
+
 		return version;
 	} catch (e) {
 		if (e instanceof Error) {
