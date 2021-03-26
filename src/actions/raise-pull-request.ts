@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { debug, endGroup, info, startGroup } from '@actions/core';
 import { exec } from '@actions/exec';
 import type { PushEvent } from '@octokit/webhooks-definitions/schema';
@@ -44,24 +45,7 @@ export const raisePullRequest = async ({
 
 	/*************************************/
 
-	startGroup('Getting new package version');
-
-	let output = '';
-	await exec('cat package.json', [], {
-		listeners: {
-			stdout: (data: Buffer) => {
-				output += data.toString();
-			},
-		},
-	});
-
-	const { version: newVersion } = JSON.parse(output) as PackageJson;
-
-	if (!newVersion) {
-		throw new Error('Could not find version number');
-	}
-
-	endGroup();
+	const newVersion = getNewVersionFromPackageJson();
 
 	/*************************************/
 
@@ -101,4 +85,29 @@ export const raisePullRequest = async ({
 		base: config.releaseBranch,
 		head: newBranch,
 	});
+};
+
+const getNewVersionFromPackageJson = (): string => {
+	startGroup('Getting new package version');
+	try {
+		const data = readFileSync('./package.json', 'utf8');
+		const { version } = JSON.parse(data) as PackageJson;
+
+		if (!version) {
+			throw new Error('Could not find version number in package.json');
+		}
+
+		info(`New version is: ${version}`);
+
+		return version;
+	} catch (e) {
+		if (e instanceof Error) {
+			debug(e.message);
+		}
+		throw new Error(
+			'Error getting the new version number. See debug logs for more information.',
+		);
+	} finally {
+		endGroup();
+	}
 };
