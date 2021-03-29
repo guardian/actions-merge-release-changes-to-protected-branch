@@ -6,9 +6,11 @@
 -   [Why?](#why)
 -   [How?](#how)
     -   [Tokens](#tokens)
+    -   [Environments](#environments)
     -   [Inputs](#inputs)
-    -   [Repository Settings](#repository-settings)
+    -   [Validating Changes](#validating-changes)
     -   [Configuring Releases](#configuring-releases)
+    -   [Repository Settings](#repository-settings)
     -   [Example](#example)
 -   [Development](#development)
     -   [Build](#build)
@@ -46,16 +48,13 @@ on:
 jobs:
     CD:
         runs-on: ubuntu-latest
+        environment: Release
         steps:
             - uses: actions/checkout@v2
               with:
                   persist-credentials: false
-            - name: 'Use Node.js 14'
-              uses: actions/setup-node@v2.1.4
-              with:
-                  node-version: 14
-            - name: Install dependencies
-              run: npm ci
+            - uses: guardian/actions-setup-node@main
+            - uses: bahmutov/npm-install@v1
             - name: Release
               env:
                   GITHUB_TOKEN: ${{ secrets.GU_GITHUB_TOKEN }}
@@ -66,6 +65,8 @@ jobs:
               with:
                   github-token: ${{ secrets.GU_GITHUB_TOKEN }}
 ```
+
+See the `environments` section for more information on [using GitHub environments](#environments)
 
 #### **Approve and merge PR**
 
@@ -97,10 +98,8 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - name: 'Use Node.js 14'
-              uses: actions/setup-node@v2.1.4
-              with:
-                  node-version: 14
+            - uses: guardian/actions-setup-node@main
+            - uses: bahmutov/npm-install@v1
             - run: npm run test
     approve:
         runs-on: ubuntu-latest
@@ -114,7 +113,11 @@ jobs:
 
 ### Tokens
 
-Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other workflow actions, hence the use of `secrets.GU_GITHUB_TOKEN` for the step which opens the pull request. As merging the pull request does not need to trigger another step, the `secrets.GITHUB_TOKEN` can be used for this part.
+Workflows completed using the `secrets.GITHUB_TOKEN` will not trigger other workflow actions, hence the use of `secrets.GU_GITHUB_TOKEN` for the step which opens the pull request. As merging the pull request does not need to trigger another step, the `secrets.GITHUB_TOKEN` can be used for this part. See the `environments` section for [more information on how to configure secrets in your repository](#environments).
+
+### Environments
+
+[GitHub environments](https://docs.github.com/en/actions/reference/environments) are "spaces" that can be configured with protection rules and secrets. Workflows that reference an environment will be bound by its protection rules and, if allowed, get access to it's secrets. When configuring auto publishing, it is recommended that you create a new environment for this purpose, configured so that only the release branch can use it. You can then add the `GU_GITHUB_TOKEN` and `GU_NPM_TOKEN` as environment secrets and reference the environment in the `CD` workflow. This means that only workflows running on the main branch will have access to the secrets required for release. This approach should be used in conjuction with the [recommended repository settings](#repository-settings).
 
 ### Inputs
 
@@ -141,17 +144,6 @@ For example, the diff for a version bump in the `package.json` might look someth
 ```
 
 The expected changes values provided through the `additional-changes` input are verified in the same way. If you would like to allow any changes to a particular file, set the value to be `"*"`
-
-### Repository Settings
-
-This action has been built for repositories that have branch protection set on their release branch(s). The following options are recommended:
-
--   Require pull request reviews before merging
--   Require status checks to pass before merging
--   Require branches to be up to date before merging
--   Include administrators
-
-If you also have the `Require review from Code Owners` option enabled, you will need to add the PR author to the CODEOWNERS file. You can do this only for the files that will be changed during the release process.
 
 ### Configuring Releases
 
@@ -208,7 +200,7 @@ If you also have the `Require review from Code Owners` option enabled, you will 
 
 4. Add workflow configuration
 
-    Refer to the [configuration in the Open PR section](#open-pr) above. See the [Using semantic-release with GitHub Actions](https://github.com/semantic-release/semantic-release/blob/master/docs/recipes/github-actions.md) document for advice on alernative configuration. The tokens will need to be added as [GitHub secrets](https://docs.github.com/en/actions/reference/encrypted-secrets).
+    Refer to the [configuration in the Open PR section](#open-pr) above. See the [Using semantic-release with GitHub Actions](https://github.com/semantic-release/semantic-release/blob/master/docs/recipes/github-actions.md) document for advice on alernative configuration. The tokens will need to be added as [GitHub secrets](https://docs.github.com/en/actions/reference/encrypted-secrets). See the `environments` section for [information on configuring secrets within environments](#environments).
 
 #### **Parsing Commit Messages**
 
@@ -251,6 +243,17 @@ When using commit messages to determine the new version, it is possible to eithe
 To aid the process of crafting confirming commit messages, tools such as [commitizen](https://github.com/commitizen/cz-cli) can be used. This presents a command line interface at the point of comitting to craft commits following convention.
 
 Alongside this, it would be worthwhile adding a process to verify that either at least one or all of the commits in a pull request conform to the spec depending on the strategy being employed. No tools of this nature have been used by the authors of this action to date and so no recommendations are made here. Contribtuions from those who have experience in this area are welcome.
+
+### Repository Settings
+
+This action has been built for repositories that have branch protection set on their release branch(s). The following options are recommended:
+
+-   Require pull request reviews before merging
+-   Require status checks to pass before merging
+-   Require branches to be up to date before merging
+-   Include administrators
+
+If you also have the `Require review from Code Owners` option enabled, you will need to add the PR author to the CODEOWNERS file. You can do this only for the files that will be changed during the release process.
 
 ### Example
 

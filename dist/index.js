@@ -7019,6 +7019,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.raisePullRequest = void 0;
+const fs_1 = __nccwpck_require__(5747);
 const core_1 = __nccwpck_require__(2186);
 const exec_1 = __nccwpck_require__(1514);
 const github_1 = __nccwpck_require__(3933);
@@ -7041,20 +7042,7 @@ const raisePullRequest = ({ payload, config, }) => __awaiter(void 0, void 0, voi
     /*************************************/
     core_1.info('Changes detected. Creating pull request');
     /*************************************/
-    core_1.startGroup('Getting new package version');
-    let output = '';
-    yield exec_1.exec('cat package.json', [], {
-        listeners: {
-            stdout: (data) => {
-                output += data.toString();
-            },
-        },
-    });
-    const { version: newVersion } = JSON.parse(output);
-    if (!newVersion) {
-        throw new Error('Could not find version number');
-    }
-    core_1.endGroup();
+    const newVersion = getNewVersionFromPackageJson();
     /*************************************/
     core_1.startGroup('Committing changes');
     const message = `${config.pullRequestPrefix} ${newVersion}`;
@@ -7083,6 +7071,27 @@ const raisePullRequest = ({ payload, config, }) => __awaiter(void 0, void 0, voi
     });
 });
 exports.raisePullRequest = raisePullRequest;
+const getNewVersionFromPackageJson = () => {
+    core_1.startGroup('Getting new package version');
+    try {
+        const data = fs_1.readFileSync('./package.json', 'utf8');
+        const { version } = JSON.parse(data);
+        if (!version) {
+            throw new Error('Could not find version number in package.json');
+        }
+        core_1.info(`New version is: ${version}`);
+        return version;
+    }
+    catch (e) {
+        if (e instanceof Error) {
+            core_1.debug(e.message);
+        }
+        throw new Error('Error getting the new version number. See debug logs for more information.');
+    }
+    finally {
+        core_1.endGroup();
+    }
+};
 
 
 /***/ }),
