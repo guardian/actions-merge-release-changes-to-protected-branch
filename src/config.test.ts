@@ -59,10 +59,16 @@ describe('The parseAdditionalChanges function', () => {
 		}).toThrowError('additional-changes value must be an object');
 	});
 
-	it('throws an error if one of the values is not an array', () => {
+	it('throws an error if one of the values is not an array or "*"', () => {
 		expect(() => {
 			_.parseAdditionalChanges('{"key": "value"}');
 		}).toThrowError('values in additional-changes object must be arrays');
+	});
+
+	it('does not throw an error if the value is "*"', () => {
+		expect(() => {
+			_.parseAdditionalChanges('{"key": "*"}');
+		}).not.toThrowError();
 	});
 });
 

@@ -72,6 +72,10 @@ const validateFiles = ({ files, config }: ValidateFileProps): void => {
 
 		const expectedChanges = config.expectedChanges[file.filename];
 
+		if (expectedChanges === '*') {
+			continue;
+		}
+
 		if (file.changes !== expectedChanges.length) {
 			throw new Error(
 				`${file.changes} ${pluralise({
