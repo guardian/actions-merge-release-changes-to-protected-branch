@@ -1,4 +1,3 @@
-module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -6941,458 +6940,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 8088:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getMergeMethod = void 0;
-const getMergeMethod = (repository) => {
-    if (repository.allow_merge_commit) {
-        return 'merge';
-    }
-    if (repository.allow_squash_merge) {
-        return 'squash';
-    }
-    if (repository.allow_rebase_merge) {
-        return 'rebase';
-    }
-    return 'merge';
-};
-exports.getMergeMethod = getMergeMethod;
-
-
-/***/ }),
-
-/***/ 441:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.mergePullRequest = void 0;
-const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(3933);
-const pkg_1 = __nccwpck_require__(1971);
-const get_merge_method_1 = __nccwpck_require__(8088);
-const mergePullRequest = ({ pullRequest, prData, payload, }) => __awaiter(void 0, void 0, void 0, function* () {
-    core_1.debug('mergePullRequest');
-    /*************************************/
-    yield github_1.octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: `Approved automatically by ${pkg_1.name}` }));
-    /*************************************/
-    core_1.info(`Checking if PR can be merged`);
-    if (!pullRequest.mergeable) {
-        core_1.info(`Pull request can not be merged, exiting.`);
-        return;
-    }
-    /*************************************/
-    core_1.info(`Merging pull request`);
-    yield github_1.octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: get_merge_method_1.getMergeMethod(payload.pull_request.base.repo) }));
-});
-exports.mergePullRequest = mergePullRequest;
-
-
-/***/ }),
-
-/***/ 3115:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.raisePullRequest = void 0;
-const fs_1 = __nccwpck_require__(5747);
-const core_1 = __nccwpck_require__(2186);
-const exec_1 = __nccwpck_require__(1514);
-const github_1 = __nccwpck_require__(3933);
-const raisePullRequest = ({ payload, config, }) => __awaiter(void 0, void 0, void 0, function* () {
-    core_1.debug('raisePullRequest');
-    /*************************************/
-    core_1.info('Checking for a release branch');
-    if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
-        core_1.info(`Push is not to ${config.releaseBranch}, ignoring`);
-        return;
-    }
-    /*************************************/
-    core_1.info('Checking changes');
-    if (!(yield exec_1.exec('git diff --quiet', [], {
-        ignoreReturnCode: true,
-    }))) {
-        core_1.info('New release not created. No further action needed.');
-        return;
-    }
-    /*************************************/
-    core_1.info('Changes detected. Creating pull request');
-    /*************************************/
-    const newVersion = getNewVersionFromPackageJson();
-    /*************************************/
-    core_1.startGroup('Committing changes');
-    const message = `${config.pullRequestPrefix} ${newVersion}`;
-    const newBranch = `${config.newBranchPrefix}${newVersion}`;
-    yield exec_1.exec(`git config --global user.email "${config.commitEmail}"`);
-    yield exec_1.exec(`git config --global user.name "${config.commitUser}"`);
-    yield exec_1.exec(`git remote set-url origin "https://git:${github_1.token}@github.com/${payload.repository.full_name}.git"`);
-    yield exec_1.exec(`git checkout -b "${newBranch}"`);
-    for (const file of Object.keys(config.expectedChanges)) {
-        yield exec_1.exec(`git add ${file}`);
-    }
-    yield exec_1.exec(`git commit -m "${message}"`);
-    yield exec_1.exec(`git status`);
-    yield exec_1.exec(`git push -u origin "${newBranch}"`);
-    core_1.endGroup();
-    /*************************************/
-    core_1.info('Opening pull request');
-    /*************************************/
-    yield github_1.octokit.pulls.create({
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        title: message,
-        body: `Updating the version number in the repository following the release of v${newVersion}`,
-        base: config.releaseBranch,
-        head: newBranch,
-    });
-});
-exports.raisePullRequest = raisePullRequest;
-const getNewVersionFromPackageJson = () => {
-    core_1.startGroup('Getting new package version');
-    try {
-        const data = fs_1.readFileSync('./package.json', 'utf8');
-        const { version } = JSON.parse(data);
-        if (!version) {
-            throw new Error('Could not find version number in package.json');
-        }
-        core_1.info(`New version is: ${version}`);
-        return version;
-    }
-    catch (e) {
-        if (e instanceof Error) {
-            core_1.debug(e.message);
-        }
-        throw new Error('Error getting the new version number. See debug logs for more information.');
-    }
-    finally {
-        core_1.endGroup();
-    }
-};
-
-
-/***/ }),
-
-/***/ 7062:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.shouldMergePullRequest = void 0;
-const core_1 = __nccwpck_require__(2186);
-const shouldMergePullRequest = ({ pullRequest, config, }) => {
-    core_1.info('Checking pull request is valid');
-    if (!pullRequest.user ||
-        pullRequest.user.login !== config.pullRequestAuthor) {
-        core_1.info(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
-        return false;
-    }
-    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
-        core_1.info(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
-        return false;
-    }
-    return true;
-};
-exports.shouldMergePullRequest = shouldMergePullRequest;
-
-
-/***/ }),
-
-/***/ 5327:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports._ = exports.validatePullRequest = void 0;
-const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(3933);
-const pluralise_1 = __nccwpck_require__(2090);
-const validatePullRequest = ({ pullRequest, config, prData, }) => __awaiter(void 0, void 0, void 0, function* () {
-    core_1.debug('validatePullRequest');
-    /*************************************/
-    const allowedFiles = Object.keys(config.expectedChanges);
-    const expectedFilesChanges = allowedFiles.length;
-    /*************************************/
-    // Although part of this case would be caught implicitly by the following checks
-    // checking it at this stage means that we can fail early and avoid
-    // calling the listFiles endpoint
-    // This check does also catch the case when not as many changes as expected
-    // are made
-    if (pullRequest.changed_files !== expectedFilesChanges) {
-        throw new Error(`Pull request changes ${pullRequest.changed_files} ${pluralise_1.pluralise({
-            number: pullRequest.changed_files,
-            singular: 'file',
-            plural: 'files',
-        })}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
-    }
-    /*************************************/
-    const { data: files } = yield github_1.octokit.pulls.listFiles(prData);
-    validateFiles({ files, config });
-});
-exports.validatePullRequest = validatePullRequest;
-const validateFiles = ({ files, config }) => {
-    const allowedFiles = Object.keys(config.expectedChanges);
-    for (const file of files) {
-        if (!allowedFiles.includes(file.filename)) {
-            throw new Error(`Disallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
-        }
-        const expectedChanges = config.expectedChanges[file.filename];
-        if (expectedChanges === '*') {
-            continue;
-        }
-        if (file.changes !== expectedChanges.length) {
-            throw new Error(`${file.changes} ${pluralise_1.pluralise({
-                number: file.changes,
-                singular: 'change',
-                plural: 'changes',
-            })} in file: ${file.filename}. Expected ${expectedChanges.length} ${pluralise_1.pluralise({
-                number: expectedChanges.length,
-                singular: 'change',
-                plural: 'changes',
-            })}`);
-        }
-        if (typeof file.patch !== 'undefined') {
-            for (const change of expectedChanges) {
-                if (!file.patch.includes(change)) {
-                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}\n\nPR Diff: ${file.patch}`);
-                }
-            }
-        }
-    }
-};
-exports._ = { validateFiles };
-
-
-/***/ }),
-
-/***/ 6373:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports._ = exports.getConfig = void 0;
-const core_1 = __nccwpck_require__(2186);
-const versionBumpChange = ['-  "version": "', '+  "version": "'];
-const packageManagerConfig = {
-    npm: {
-        'package.json': versionBumpChange,
-        'package-lock.json': versionBumpChange,
-    },
-    yarn: {
-        'package.json': versionBumpChange,
-    },
-};
-const allowedPackageManagerValues = Object.keys(packageManagerConfig);
-const getConfigValueOrDefault = (key, d) => {
-    const input = core_1.getInput(key);
-    return input && input !== '' ? input : d;
-};
-const parseAdditionalChanges = (additionalChanges) => {
-    if (!additionalChanges || additionalChanges === '{}') {
-        return {};
-    }
-    let json;
-    try {
-        // eslint-disable-next-line prefer-const -- this is setting the value above so I don't know what eslint is complaining about
-        json = JSON.parse(additionalChanges);
-    }
-    catch (err) {
-        throw new Error('Invalid JSON provided for additional-changes input');
-    }
-    if (json !== Object(json) || Array.isArray(json)) {
-        throw new Error('additional-changes value must be an object');
-    }
-    for (const changes of Object.values(json)) {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Typescript thinks this has to be true but we're parsing JSON so let's make sure
-        if (!Array.isArray(changes) && changes !== '*') {
-            throw new Error('values in additional-changes object must be arrays or "*"');
-        }
-        for (const change of changes) {
-            if (typeof change !== 'string') {
-                throw new Error('values in additional-changes object must be strings');
-            }
-        }
-    }
-    return json;
-};
-const getFileChangesConfig = () => {
-    const pm = getConfigValueOrDefault('package-manager', 'npm');
-    if (!allowedPackageManagerValues.includes(pm)) {
-        throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
-    }
-    const pmChanges = packageManagerConfig[pm];
-    return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };
-};
-const getAdditionalChanges = () => {
-    const additionalChanges = getConfigValueOrDefault('additional-changes', '{}');
-    return parseAdditionalChanges(additionalChanges);
-};
-const getConfig = () => {
-    return Object.assign(Object.assign({}, getFileChangesConfig()), { pullRequestAuthor: getConfigValueOrDefault('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValueOrDefault('pr-prefix', 'chore(release):'), releaseBranch: getConfigValueOrDefault('release-branch', 'main'), newBranchPrefix: getConfigValueOrDefault('branch-prefix', 'release-'), commitUser: getConfigValueOrDefault('commit-user', 'guardian-ci'), commitEmail: getConfigValueOrDefault('commit-email', 'guardian-ci@users.noreply.github.com') });
-};
-exports.getConfig = getConfig;
-exports._ = {
-    getConfigValueOrDefault,
-    getFileChangesConfig,
-    parseAdditionalChanges,
-};
-
-
-/***/ }),
-
-/***/ 6144:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(5438);
-const merge_pull_request_1 = __nccwpck_require__(441);
-const raise_pull_request_1 = __nccwpck_require__(3115);
-const should_merge_pull_request_1 = __nccwpck_require__(7062);
-const validate_pull_request_1 = __nccwpck_require__(5327);
-const config_1 = __nccwpck_require__(6373);
-const github_2 = __nccwpck_require__(3933);
-const pkg_1 = __nccwpck_require__(1971);
-function run() {
-    var _a;
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            core_1.info(`Running ${pkg_1.name}`);
-            core_1.debug(`Event name: ${github_1.context.eventName}`);
-            core_1.debug(`Action type: ${(_a = github_1.context.payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
-            const config = config_1.getConfig();
-            switch (github_1.context.eventName) {
-                case 'push': {
-                    const payload = github_1.context.payload;
-                    yield raise_pull_request_1.raisePullRequest({ payload, config });
-                    break;
-                }
-                case 'pull_request': {
-                    const payload = github_1.context.payload;
-                    const prData = {
-                        owner: payload.repository.owner.login,
-                        repo: payload.repository.name,
-                        pull_number: payload.pull_request.number,
-                    };
-                    // PR information isn't necessarily up to date in webhook payload
-                    // Get PR from the API to be sure
-                    const { data: pullRequest } = yield github_2.octokit.pulls.get(prData);
-                    core_1.debug(`Pull request: ${payload.pull_request.number}`);
-                    if (should_merge_pull_request_1.shouldMergePullRequest({ pullRequest, config })) {
-                        yield validate_pull_request_1.validatePullRequest({ pullRequest, prData, config });
-                        yield merge_pull_request_1.mergePullRequest({ pullRequest, prData, payload });
-                    }
-                    break;
-                }
-                default:
-                    throw new Error(`Unknown eventName: ${github_1.context.eventName}`);
-            }
-        }
-        catch (error) {
-            if (error instanceof Error) {
-                core_1.setFailed(error.message);
-            }
-            else {
-                throw error;
-            }
-        }
-    });
-}
-void run();
-
-
-/***/ }),
-
-/***/ 3933:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.octokit = exports.token = void 0;
-const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(5438);
-exports.token = core_1.getInput('github-token', { required: true });
-exports.octokit = github_1.getOctokit(exports.token);
-
-
-/***/ }),
-
-/***/ 1971:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.name = void 0;
-exports.name = (_a = __nccwpck_require__(306)/* .name */ .u2) !== null && _a !== void 0 ? _a : "Couldn't find package name?";
-
-
-/***/ }),
-
-/***/ 2090:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.pluralise = void 0;
-const pluralise = ({ number, singular, plural, }) => {
-    return number === 1 ? singular : plural;
-};
-exports.pluralise = pluralise;
-
-
-/***/ }),
-
 /***/ 2877:
 /***/ ((module) => {
 
@@ -7405,7 +6952,7 @@ module.exports = eval("require")("encoding");
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse("{\"u2\":\"@guardian/actions-merge-release-changes-to-protected-branch\"}");
+module.exports = JSON.parse('{"u2":"@guardian/actions-merge-release-changes-to-protected-branch"}');
 
 /***/ }),
 
@@ -7529,8 +7076,9 @@ module.exports = require("zlib");;
 /******/ 	// The require function
 /******/ 	function __nccwpck_require__(moduleId) {
 /******/ 		// Check if module is in cache
-/******/ 		if(__webpack_module_cache__[moduleId]) {
-/******/ 			return __webpack_module_cache__[moduleId].exports;
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
@@ -7553,12 +7101,393 @@ module.exports = require("zlib");;
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
-/******/ 	__nccwpck_require__.ab = __dirname + "/";/************************************************************************/
-/******/ 	// module exports must be returned from runtime so entry inlining is disabled
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	return __nccwpck_require__(6144);
+/******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";/************************************************************************/
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+// ESM COMPAT FLAG
+__nccwpck_require__.r(__webpack_exports__);
+
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(2186);
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(5438);
+;// CONCATENATED MODULE: ./src/lib/github.ts
+
+
+const token = (0,core.getInput)('github-token', { required: true });
+const octokit = (0,github.getOctokit)(token);
+
+;// CONCATENATED MODULE: ./src/lib/pkg.ts
+var _a;
+const pkg_name = (_a = __nccwpck_require__(306)/* .name */ .u2) !== null && _a !== void 0 ? _a : "Couldn't find package name?";
+
+;// CONCATENATED MODULE: ./src/actions/get-merge-method.ts
+const getMergeMethod = (repository) => {
+    if (repository.allow_merge_commit) {
+        return 'merge';
+    }
+    if (repository.allow_squash_merge) {
+        return 'squash';
+    }
+    if (repository.allow_rebase_merge) {
+        return 'rebase';
+    }
+    return 'merge';
+};
+
+;// CONCATENATED MODULE: ./src/actions/merge-pull-request.ts
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+const mergePullRequest = ({ pullRequest, prData, payload, }) => __awaiter(void 0, void 0, void 0, function* () {
+    (0,core.debug)('mergePullRequest');
+    /*************************************/
+    yield octokit.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: `Approved automatically by ${pkg_name}` }));
+    /*************************************/
+    (0,core.info)(`Checking if PR can be merged`);
+    if (!pullRequest.mergeable) {
+        (0,core.info)(`Pull request can not be merged, exiting.`);
+        return;
+    }
+    /*************************************/
+    (0,core.info)(`Merging pull request`);
+    yield octokit.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: getMergeMethod(payload.pull_request.base.repo) }));
+});
+
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __nccwpck_require__(5747);
+// EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
+var exec = __nccwpck_require__(1514);
+;// CONCATENATED MODULE: ./src/actions/raise-pull-request.ts
+var raise_pull_request_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+const raisePullRequest = ({ payload, config, }) => raise_pull_request_awaiter(void 0, void 0, void 0, function* () {
+    (0,core.debug)('raisePullRequest');
+    /*************************************/
+    (0,core.info)('Checking for a release branch');
+    if (payload.ref !== `refs/heads/${config.releaseBranch}`) {
+        (0,core.info)(`Push is not to ${config.releaseBranch}, ignoring`);
+        return;
+    }
+    /*************************************/
+    (0,core.info)('Checking changes');
+    if (!(yield (0,exec.exec)('git diff --quiet', [], {
+        ignoreReturnCode: true,
+    }))) {
+        (0,core.info)('New release not created. No further action needed.');
+        return;
+    }
+    /*************************************/
+    (0,core.info)('Changes detected. Creating pull request');
+    /*************************************/
+    const newVersion = getNewVersionFromPackageJson();
+    /*************************************/
+    (0,core.startGroup)('Committing changes');
+    const message = `${config.pullRequestPrefix} ${newVersion}`;
+    const newBranch = `${config.newBranchPrefix}${newVersion}`;
+    yield (0,exec.exec)(`git config --global user.email "${config.commitEmail}"`);
+    yield (0,exec.exec)(`git config --global user.name "${config.commitUser}"`);
+    yield (0,exec.exec)(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
+    yield (0,exec.exec)(`git checkout -b "${newBranch}"`);
+    for (const file of Object.keys(config.expectedChanges)) {
+        yield (0,exec.exec)(`git add ${file}`);
+    }
+    yield (0,exec.exec)(`git commit -m "${message}"`);
+    yield (0,exec.exec)(`git status`);
+    yield (0,exec.exec)(`git push -u origin "${newBranch}"`);
+    (0,core.endGroup)();
+    /*************************************/
+    (0,core.info)('Opening pull request');
+    /*************************************/
+    yield octokit.pulls.create({
+        owner: payload.repository.owner.login,
+        repo: payload.repository.name,
+        title: message,
+        body: `Updating the version number in the repository following the release of v${newVersion}`,
+        base: config.releaseBranch,
+        head: newBranch,
+    });
+});
+const getNewVersionFromPackageJson = () => {
+    (0,core.startGroup)('Getting new package version');
+    try {
+        const data = (0,external_fs_.readFileSync)('./package.json', 'utf8');
+        const { version } = JSON.parse(data);
+        if (!version) {
+            throw new Error('Could not find version number in package.json');
+        }
+        (0,core.info)(`New version is: ${version}`);
+        return version;
+    }
+    catch (e) {
+        if (e instanceof Error) {
+            (0,core.debug)(e.message);
+        }
+        throw new Error('Error getting the new version number. See debug logs for more information.');
+    }
+    finally {
+        (0,core.endGroup)();
+    }
+};
+
+;// CONCATENATED MODULE: ./src/actions/should-merge-pull-request.ts
+
+const shouldMergePullRequest = ({ pullRequest, config, }) => {
+    (0,core.info)('Checking pull request is valid');
+    if (!pullRequest.user ||
+        pullRequest.user.login !== config.pullRequestAuthor) {
+        (0,core.info)(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
+        return false;
+    }
+    if (!pullRequest.title.startsWith(config.pullRequestPrefix)) {
+        (0,core.info)(`Pull request title does not start with "${config.pullRequestPrefix}", ignoring.`);
+        return false;
+    }
+    return true;
+};
+
+;// CONCATENATED MODULE: ./src/lib/pluralise.ts
+const pluralise = ({ number, singular, plural, }) => {
+    return number === 1 ? singular : plural;
+};
+
+;// CONCATENATED MODULE: ./src/actions/validate-pull-request.ts
+var validate_pull_request_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+const validatePullRequest = ({ pullRequest, config, prData, }) => validate_pull_request_awaiter(void 0, void 0, void 0, function* () {
+    (0,core.debug)('validatePullRequest');
+    /*************************************/
+    const allowedFiles = Object.keys(config.expectedChanges);
+    const expectedFilesChanges = allowedFiles.length;
+    /*************************************/
+    // Although part of this case would be caught implicitly by the following checks
+    // checking it at this stage means that we can fail early and avoid
+    // calling the listFiles endpoint
+    // This check does also catch the case when not as many changes as expected
+    // are made
+    if (pullRequest.changed_files !== expectedFilesChanges) {
+        throw new Error(`Pull request changes ${pullRequest.changed_files} ${pluralise({
+            number: pullRequest.changed_files,
+            singular: 'file',
+            plural: 'files',
+        })}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
+    }
+    /*************************************/
+    const { data: files } = yield octokit.pulls.listFiles(prData);
+    validateFiles({ files, config });
+});
+const validateFiles = ({ files, config }) => {
+    const allowedFiles = Object.keys(config.expectedChanges);
+    for (const file of files) {
+        if (!allowedFiles.includes(file.filename)) {
+            throw new Error(`Disallowed file (${file.filename}) changed. Allowed files are: ${allowedFiles.join(', ')}`);
+        }
+        const expectedChanges = config.expectedChanges[file.filename];
+        if (expectedChanges === '*') {
+            continue;
+        }
+        if (file.changes !== expectedChanges.length) {
+            throw new Error(`${file.changes} ${pluralise({
+                number: file.changes,
+                singular: 'change',
+                plural: 'changes',
+            })} in file: ${file.filename}. Expected ${expectedChanges.length} ${pluralise({
+                number: expectedChanges.length,
+                singular: 'change',
+                plural: 'changes',
+            })}`);
+        }
+        if (typeof file.patch !== 'undefined') {
+            for (const change of expectedChanges) {
+                if (!file.patch.includes(change)) {
+                    throw new Error(`Expected to see the following string in diff for ${file.filename}: ${change}\n\nPR Diff: ${file.patch}`);
+                }
+            }
+        }
+    }
+};
+const _ = { validateFiles };
+
+;// CONCATENATED MODULE: ./src/config.ts
+
+const versionBumpChange = ['-  "version": "', '+  "version": "'];
+const packageManagerConfig = {
+    npm: {
+        'package.json': versionBumpChange,
+        'package-lock.json': versionBumpChange,
+    },
+    yarn: {
+        'package.json': versionBumpChange,
+    },
+};
+const allowedPackageManagerValues = Object.keys(packageManagerConfig);
+const getConfigValueOrDefault = (key, d) => {
+    const input = (0,core.getInput)(key);
+    return input && input !== '' ? input : d;
+};
+const parseAdditionalChanges = (additionalChanges) => {
+    if (!additionalChanges || additionalChanges === '{}') {
+        return {};
+    }
+    let json;
+    try {
+        // eslint-disable-next-line prefer-const -- this is setting the value above so I don't know what eslint is complaining about
+        json = JSON.parse(additionalChanges);
+    }
+    catch (err) {
+        throw new Error('Invalid JSON provided for additional-changes input');
+    }
+    if (json !== Object(json) || Array.isArray(json)) {
+        throw new Error('additional-changes value must be an object');
+    }
+    for (const changes of Object.values(json)) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Typescript thinks this has to be true but we're parsing JSON so let's make sure
+        if (!Array.isArray(changes) && changes !== '*') {
+            throw new Error('values in additional-changes object must be arrays or "*"');
+        }
+        for (const change of changes) {
+            if (typeof change !== 'string') {
+                throw new Error('values in additional-changes object must be strings');
+            }
+        }
+    }
+    return json;
+};
+const getFileChangesConfig = () => {
+    const pm = getConfigValueOrDefault('package-manager', 'npm');
+    if (!allowedPackageManagerValues.includes(pm)) {
+        throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
+    }
+    const pmChanges = packageManagerConfig[pm];
+    return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };
+};
+const getAdditionalChanges = () => {
+    const additionalChanges = getConfigValueOrDefault('additional-changes', '{}');
+    return parseAdditionalChanges(additionalChanges);
+};
+const getConfig = () => {
+    return Object.assign(Object.assign({}, getFileChangesConfig()), { pullRequestAuthor: getConfigValueOrDefault('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValueOrDefault('pr-prefix', 'chore(release):'), releaseBranch: getConfigValueOrDefault('release-branch', 'main'), newBranchPrefix: getConfigValueOrDefault('branch-prefix', 'release-'), commitUser: getConfigValueOrDefault('commit-user', 'guardian-ci'), commitEmail: getConfigValueOrDefault('commit-email', 'guardian-ci@users.noreply.github.com') });
+};
+const config_ = {
+    getConfigValueOrDefault,
+    getFileChangesConfig,
+    parseAdditionalChanges,
+};
+
+;// CONCATENATED MODULE: ./src/index.ts
+var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+
+
+
+
+
+function run() {
+    var _a;
+    return src_awaiter(this, void 0, void 0, function* () {
+        try {
+            (0,core.info)(`Running ${pkg_name}`);
+            (0,core.debug)(`Event name: ${github.context.eventName}`);
+            (0,core.debug)(`Action type: ${(_a = github.context.payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
+            const config = getConfig();
+            switch (github.context.eventName) {
+                case 'push': {
+                    const payload = github.context.payload;
+                    yield raisePullRequest({ payload, config });
+                    break;
+                }
+                case 'pull_request': {
+                    const payload = github.context.payload;
+                    const prData = {
+                        owner: payload.repository.owner.login,
+                        repo: payload.repository.name,
+                        pull_number: payload.pull_request.number,
+                    };
+                    // PR information isn't necessarily up to date in webhook payload
+                    // Get PR from the API to be sure
+                    const { data: pullRequest } = yield octokit.pulls.get(prData);
+                    (0,core.debug)(`Pull request: ${payload.pull_request.number}`);
+                    if (shouldMergePullRequest({ pullRequest, config })) {
+                        yield validatePullRequest({ pullRequest, prData, config });
+                        yield mergePullRequest({ pullRequest, prData, payload });
+                    }
+                    break;
+                }
+                default:
+                    throw new Error(`Unknown eventName: ${github.context.eventName}`);
+            }
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                (0,core.setFailed)(error.message);
+            }
+            else {
+                throw error;
+            }
+        }
+    });
+}
+void run();
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
