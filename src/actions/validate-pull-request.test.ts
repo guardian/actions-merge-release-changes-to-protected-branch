@@ -8,12 +8,12 @@ type Files = GetResponseDataTypeFromEndpointMethod<
 >;
 
 describe('The validateFiles function', () => {
-	const config = ({
+	const config = {
 		expectedChanges: {
 			'package.json': ['-  "version": "', '+  "version": "'],
 			'package-lock.json': ['-  "version": "'],
 		},
-	} as unknown) as Config;
+	} as unknown as Config;
 
 	it('should throw an error if the file changed is not one of those allowed', () => {
 		const files = [{ filename: 'test.json' }] as Files;
@@ -84,12 +84,12 @@ describe('The validateFiles function', () => {
 	});
 
 	it('should allow any changes if the allowed value is *', () => {
-		const config = ({
+		const config = {
 			expectedChanges: {
 				'package.json': ['-  "version": "', '+  "version": "'],
 				'package-lock.json': '*',
 			},
-		} as unknown) as Config;
+		} as unknown as Config;
 
 		const files = [
 			{
@@ -107,11 +107,11 @@ describe('The validateFiles function', () => {
 	});
 
 	it('should still error for unexpected file changes if value is *', () => {
-		const config = ({
+		const config = {
 			expectedChanges: {
 				'package-lock.json': '*',
 			},
-		} as unknown) as Config;
+		} as unknown as Config;
 
 		const files = [
 			{
