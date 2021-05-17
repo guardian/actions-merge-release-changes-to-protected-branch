@@ -1,9 +1,5 @@
 import { debug, info, setFailed } from '@actions/core';
 import { context } from '@actions/github';
-import type {
-	PullRequestEvent,
-	PushEvent,
-} from '@octokit/webhooks-definitions/schema';
 import { mergePullRequest } from './actions/merge-pull-request';
 import { raisePullRequest } from './actions/raise-pull-request';
 import { shouldMergePullRequest } from './actions/should-merge-pull-request';
@@ -11,6 +7,10 @@ import { validatePullRequest } from './actions/validate-pull-request';
 import { getConfig } from './config';
 import { octokit } from './lib/github';
 import { name } from './lib/pkg';
+import type {
+	PullRequestEvent,
+	PushEvent,
+} from '@octokit/webhooks-definitions/schema';
 
 export type PRData = { owner: string; repo: string; pull_number: number };
 

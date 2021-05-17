@@ -1,5 +1,5 @@
-import type { Repository } from '@octokit/webhooks-definitions/schema';
 import { getMergeMethod } from './get-merge-method';
+import type { Repository } from '@octokit/webhooks-definitions/schema';
 
 describe('The getMergeMethod function', () => {
 	it('returns merge if merge commits are allowed', () => {

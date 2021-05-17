@@ -1,10 +1,10 @@
 import { readFileSync } from 'fs';
 import { debug, endGroup, info, startGroup } from '@actions/core';
 import { exec } from '@actions/exec';
+import { octokit, token } from '../lib/github';
+import type { Config } from '../config';
 import type { PushEvent } from '@octokit/webhooks-definitions/schema';
 import type { PackageJson } from 'type-fest';
-import type { Config } from '../config';
-import { octokit, token } from '../lib/github';
 
 interface Props {
 	payload: PushEvent;

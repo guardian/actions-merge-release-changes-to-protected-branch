@@ -1,7 +1,7 @@
 import { info } from '@actions/core';
-import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 import type { Config } from '../config';
 import type { octokit } from '../lib/github';
+import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 
 interface Props {
 	pullRequest: GetResponseDataTypeFromEndpointMethod<
