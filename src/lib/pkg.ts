@@ -1,4 +1,3 @@
-/* eslint-disable import/order -- some rules are in conflict, but it's fine */
 import type { PackageJson } from 'type-fest';
 
 export const name =

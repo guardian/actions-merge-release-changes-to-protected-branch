@@ -1,9 +1,9 @@
 import { debug } from '@actions/core';
-import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
-import type { Config } from '../config';
-import type { PRData } from '../index';
 import { octokit } from '../lib/github';
 import { pluralise } from '../lib/pluralise';
+import type { Config } from '../config';
+import type { PRData } from '../index';
+import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 
 interface Props {
 	pullRequest: GetResponseDataTypeFromEndpointMethod<
