@@ -4,7 +4,7 @@ import type { octokit } from '../lib/github';
 import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 
 type Files = GetResponseDataTypeFromEndpointMethod<
-	typeof octokit.pulls.listFiles
+	typeof octokit.rest.pulls.listFiles
 >;
 
 describe('The validateFiles function', () => {

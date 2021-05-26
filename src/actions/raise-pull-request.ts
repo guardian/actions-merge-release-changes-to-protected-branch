@@ -77,7 +77,7 @@ export const raisePullRequest = async ({
 
 	/*************************************/
 
-	await octokit.pulls.create({
+	await octokit.rest.pulls.create({
 		owner: payload.repository.owner.login,
 		repo: payload.repository.name,
 		title: message,

@@ -5,7 +5,7 @@ import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 
 interface Props {
 	pullRequest: GetResponseDataTypeFromEndpointMethod<
-		typeof octokit.pulls.get
+		typeof octokit.rest.pulls.get
 	>;
 	config: Config;
 }
