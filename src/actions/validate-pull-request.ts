@@ -7,7 +7,7 @@ import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 
 interface Props {
 	pullRequest: GetResponseDataTypeFromEndpointMethod<
-		typeof octokit.pulls.get
+		typeof octokit.rest.pulls.get
 	>;
 	config: Config;
 	prData: PRData;
@@ -15,7 +15,7 @@ interface Props {
 
 interface ValidateFileProps {
 	files: GetResponseDataTypeFromEndpointMethod<
-		typeof octokit.pulls.listFiles
+		typeof octokit.rest.pulls.listFiles
 	>;
 	config: Config;
 }
@@ -53,7 +53,7 @@ export const validatePullRequest = async ({
 
 	/*************************************/
 
-	const { data: files } = await octokit.pulls.listFiles(prData);
+	const { data: files } = await octokit.rest.pulls.listFiles(prData);
 
 	validateFiles({ files, config });
 };

@@ -8,7 +8,7 @@ import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
 
 interface Props {
 	pullRequest: GetResponseDataTypeFromEndpointMethod<
-		typeof octokit.pulls.get
+		typeof octokit.rest.pulls.get
 	>;
 	prData: PRData;
 	payload: PullRequestEvent;
@@ -23,7 +23,7 @@ export const mergePullRequest = async ({
 
 	/*************************************/
 
-	await octokit.pulls.createReview({
+	await octokit.rest.pulls.createReview({
 		...prData,
 		event: 'APPROVE',
 		body: `Approved automatically by ${name}`,
@@ -42,7 +42,7 @@ export const mergePullRequest = async ({
 
 	info(`Merging pull request`);
 
-	await octokit.pulls.merge({
+	await octokit.rest.pulls.merge({
 		...prData,
 		merge_method: getMergeMethod(payload.pull_request.base.repo),
 	});

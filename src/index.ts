@@ -40,7 +40,9 @@ async function run(): Promise<void> {
 
 				// PR information isn't necessarily up to date in webhook payload
 				// Get PR from the API to be sure
-				const { data: pullRequest } = await octokit.pulls.get(prData);
+				const { data: pullRequest } = await octokit.rest.pulls.get(
+					prData,
+				);
 				debug(`Pull request: ${payload.pull_request.number}`);
 
 				if (shouldMergePullRequest({ pullRequest, config })) {
