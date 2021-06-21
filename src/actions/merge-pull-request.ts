@@ -1,10 +1,10 @@
 import { debug, info } from '@actions/core';
+import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
+import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
+import type { PRData } from '../index';
 import { octokit } from '../lib/github';
 import { name } from '../lib/pkg';
 import { getMergeMethod } from './get-merge-method';
-import type { PRData } from '../index';
-import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
-import type { PullRequestEvent } from '@octokit/webhooks-definitions/schema';
 
 interface Props {
 	pullRequest: GetResponseDataTypeFromEndpointMethod<

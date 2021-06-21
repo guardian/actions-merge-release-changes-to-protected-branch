@@ -1,7 +1,7 @@
-import { _ } from './validate-pull-request';
+import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 import type { Config } from '../config';
 import type { octokit } from '../lib/github';
-import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
+import { _ } from './validate-pull-request';
 
 type Files = GetResponseDataTypeFromEndpointMethod<
 	typeof octokit.rest.pulls.listFiles
