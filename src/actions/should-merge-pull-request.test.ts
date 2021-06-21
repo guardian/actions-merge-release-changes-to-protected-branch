@@ -1,7 +1,7 @@
-import { shouldMergePullRequest } from './should-merge-pull-request';
+import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 import type { Config } from '../config';
 import type { octokit } from '../lib/github';
-import type { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
+import { shouldMergePullRequest } from './should-merge-pull-request';
 
 type PullRequest = GetResponseDataTypeFromEndpointMethod<
 	typeof octokit.rest.pulls.get
