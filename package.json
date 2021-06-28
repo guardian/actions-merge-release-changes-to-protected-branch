@@ -19,7 +19,7 @@
     "@actions/github": "^5.0.0"
   },
   "devDependencies": {
-    "@guardian/eslint-config": "^0.5.0",
+    "@guardian/eslint-config": "^0.6.0",
     "@guardian/eslint-config-typescript": "^0.5.0",
     "@guardian/prettier": "^0.6.0",
     "@octokit/types": "^6.16.4",
