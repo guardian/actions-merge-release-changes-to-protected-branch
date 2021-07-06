@@ -12,5 +12,10 @@
 				"@typescript-eslint/no-var-requires": "off" // it's node
 			}
 		}
-	]
+	],
+	"settings": {
+		"import/resolver": {
+			"typescript": {}
+		}
+	}
 }

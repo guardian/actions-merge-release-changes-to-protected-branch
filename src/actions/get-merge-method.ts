@@ -1,4 +1,4 @@
-import type { Repository } from '@octokit/webhooks-definitions/schema';
+import type { Repository } from '@octokit/webhooks-types';
 
 export const getMergeMethod = (
 	repository: Repository,

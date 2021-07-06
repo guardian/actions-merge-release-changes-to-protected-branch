@@ -1,4 +1,4 @@
-import type { Repository } from '@octokit/webhooks-definitions/schema';
+import type { Repository } from '@octokit/webhooks-types';
 import { getMergeMethod } from './get-merge-method';
 
 describe('The getMergeMethod function', () => {
