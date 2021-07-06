@@ -3,7 +3,7 @@
 	"env": {
 		"node": true
 	},
-	"extends": "@guardian/eslint-config",
+	"extends": "@guardian/eslint-config-typescript",
 	"overrides": [
 		{
 			"files": ["*.ts", "*.tsx"],
