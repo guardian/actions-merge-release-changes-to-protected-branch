@@ -22,17 +22,17 @@
     "@guardian/eslint-config-typescript": "^0.6.0",
     "@guardian/prettier": "^0.6.0",
     "@octokit/types": "^6.16.4",
-    "@octokit/webhooks-types": "^4.0.3",
-    "@types/jest": "^26.0.23",
-    "@types/node": "^16.0.0",
+    "@octokit/webhooks-types": "^4.1.0",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.3.1",
     "@vercel/ncc": "^0.28.5",
     "eslint": "^7.29.0",
     "eslint-import-resolver-typescript": "^2.4.0",
     "husky": "^7.0.1",
     "jest": "^26.6.3",
-    "prettier": "^2.3.1",
+    "prettier": "^2.3.2",
     "ts-jest": "^26.5.6",
-    "type-fest": "^1.2.1",
+    "type-fest": "^1.2.2",
     "typescript": "^4.3.5"
   }
 }
