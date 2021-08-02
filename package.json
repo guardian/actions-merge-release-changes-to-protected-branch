@@ -24,7 +24,7 @@
     "@octokit/types": "^6.21.1",
 		"@octokit/webhooks-types": "^4.2.2",
     "@types/jest": "^26.0.24",
-    "@types/node": "^16.4.3",
+    "@types/node": "^16.4.10",
     "@vercel/ncc": "^0.29.0",
     "eslint": "^7.32.0",
     "eslint-import-resolver-typescript": "^2.4.0",
