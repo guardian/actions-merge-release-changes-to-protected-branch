@@ -7513,8 +7513,8 @@ const token = (0,core.getInput)('github-token', { required: true });
 const octokit = (0,github.getOctokit)(token);
 
 ;// CONCATENATED MODULE: ./src/lib/pkg.ts
-var _a;
-const pkg_name = (_a = __nccwpck_require__(306)/* .name */ .u2) !== null && _a !== void 0 ? _a : "Couldn't find package name?";
+const pkg_name = __nccwpck_require__(306)/* .name */ .u2 ??
+    "Couldn't find package name?";
 
 ;// CONCATENATED MODULE: ./src/actions/get-merge-method.ts
 const getMergeMethod = (repository) => {
@@ -7531,23 +7531,18 @@ const getMergeMethod = (repository) => {
 };
 
 ;// CONCATENATED MODULE: ./src/actions/merge-pull-request.ts
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 
 
 
-const mergePullRequest = ({ pullRequest, prData, payload, }) => __awaiter(void 0, void 0, void 0, function* () {
+const mergePullRequest = async ({ pullRequest, prData, payload, }) => {
     (0,core.debug)('mergePullRequest');
     /*************************************/
-    yield octokit.rest.pulls.createReview(Object.assign(Object.assign({}, prData), { event: 'APPROVE', body: `Approved automatically by ${pkg_name}` }));
+    await octokit.rest.pulls.createReview({
+        ...prData,
+        event: 'APPROVE',
+        body: `Approved automatically by ${pkg_name}`,
+    });
     /*************************************/
     (0,core.info)(`Checking if PR can be merged`);
     if (!pullRequest.mergeable) {
@@ -7556,28 +7551,22 @@ const mergePullRequest = ({ pullRequest, prData, payload, }) => __awaiter(void 0
     }
     /*************************************/
     (0,core.info)(`Merging pull request`);
-    yield octokit.rest.pulls.merge(Object.assign(Object.assign({}, prData), { merge_method: getMergeMethod(payload.pull_request.base.repo) }));
-});
+    await octokit.rest.pulls.merge({
+        ...prData,
+        merge_method: getMergeMethod(payload.pull_request.base.repo),
+    });
+};
 
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(5747);
 // EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
 var exec = __nccwpck_require__(1514);
 ;// CONCATENATED MODULE: ./src/actions/raise-pull-request.ts
-var raise_pull_request_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 
 
 
-const raisePullRequest = ({ payload, config, }) => raise_pull_request_awaiter(void 0, void 0, void 0, function* () {
+const raisePullRequest = async ({ payload, config, }) => {
     (0,core.debug)('raisePullRequest');
     /*************************************/
     (0,core.info)('Checking for a release branch');
@@ -7587,7 +7576,7 @@ const raisePullRequest = ({ payload, config, }) => raise_pull_request_awaiter(vo
     }
     /*************************************/
     (0,core.info)('Checking changes');
-    if (!(yield (0,exec.exec)('git diff --quiet', [], {
+    if (!(await (0,exec.exec)('git diff --quiet', [], {
         ignoreReturnCode: true,
     }))) {
         (0,core.info)('New release not created. No further action needed.');
@@ -7601,21 +7590,21 @@ const raisePullRequest = ({ payload, config, }) => raise_pull_request_awaiter(vo
     (0,core.startGroup)('Committing changes');
     const message = `${config.pullRequestPrefix} ${newVersion}`;
     const newBranch = `${config.newBranchPrefix}${newVersion}`;
-    yield (0,exec.exec)(`git config --global user.email "${config.commitEmail}"`);
-    yield (0,exec.exec)(`git config --global user.name "${config.commitUser}"`);
-    yield (0,exec.exec)(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
-    yield (0,exec.exec)(`git checkout -b "${newBranch}"`);
+    await (0,exec.exec)(`git config --global user.email "${config.commitEmail}"`);
+    await (0,exec.exec)(`git config --global user.name "${config.commitUser}"`);
+    await (0,exec.exec)(`git remote set-url origin "https://git:${token}@github.com/${payload.repository.full_name}.git"`);
+    await (0,exec.exec)(`git checkout -b "${newBranch}"`);
     for (const file of Object.keys(config.expectedChanges)) {
-        yield (0,exec.exec)(`git add ${file}`);
+        await (0,exec.exec)(`git add ${file}`);
     }
-    yield (0,exec.exec)(`git commit -m "${message}"`);
-    yield (0,exec.exec)(`git status`);
-    yield (0,exec.exec)(`git push -u origin "${newBranch}"`);
+    await (0,exec.exec)(`git commit -m "${message}"`);
+    await (0,exec.exec)(`git status`);
+    await (0,exec.exec)(`git push -u origin "${newBranch}"`);
     (0,core.endGroup)();
     /*************************************/
     (0,core.info)('Opening pull request');
     /*************************************/
-    yield octokit.rest.pulls.create({
+    await octokit.rest.pulls.create({
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
         title: message,
@@ -7623,7 +7612,7 @@ const raisePullRequest = ({ payload, config, }) => raise_pull_request_awaiter(vo
         base: config.releaseBranch,
         head: newBranch,
     });
-});
+};
 const getNewVersionFromPackageJson = () => {
     (0,core.startGroup)('Getting new package version');
     try {
@@ -7668,19 +7657,10 @@ const pluralise = ({ number, singular, plural, }) => {
 };
 
 ;// CONCATENATED MODULE: ./src/actions/validate-pull-request.ts
-var validate_pull_request_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 
 
-const validatePullRequest = ({ pullRequest, config, prData, }) => validate_pull_request_awaiter(void 0, void 0, void 0, function* () {
+const validatePullRequest = async ({ pullRequest, config, prData, }) => {
     (0,core.debug)('validatePullRequest');
     /*************************************/
     const allowedFiles = Object.keys(config.expectedChanges);
@@ -7699,9 +7679,9 @@ const validatePullRequest = ({ pullRequest, config, prData, }) => validate_pull_
         })}. Expected to see changes to all of the following files: ${allowedFiles.join(', ')}`);
     }
     /*************************************/
-    const { data: files } = yield octokit.rest.pulls.listFiles(prData);
+    const { data: files } = await octokit.rest.pulls.listFiles(prData);
     validateFiles({ files, config });
-});
+};
 const validateFiles = ({ files, config }) => {
     const allowedFiles = Object.keys(config.expectedChanges);
     for (const file of files) {
@@ -7785,14 +7765,22 @@ const getFileChangesConfig = () => {
         throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
     }
     const pmChanges = packageManagerConfig[pm];
-    return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };
+    return { expectedChanges: { ...getAdditionalChanges(), ...pmChanges } };
 };
 const getAdditionalChanges = () => {
     const additionalChanges = getConfigValueOrDefault('additional-changes', '{}');
     return parseAdditionalChanges(additionalChanges);
 };
 const getConfig = () => {
-    return Object.assign(Object.assign({}, getFileChangesConfig()), { pullRequestAuthor: getConfigValueOrDefault('pr-author', 'guardian-ci'), pullRequestPrefix: getConfigValueOrDefault('pr-prefix', 'chore(release):'), releaseBranch: getConfigValueOrDefault('release-branch', 'main'), newBranchPrefix: getConfigValueOrDefault('branch-prefix', 'release-'), commitUser: getConfigValueOrDefault('commit-user', 'guardian-ci'), commitEmail: getConfigValueOrDefault('commit-email', 'guardian-ci@users.noreply.github.com') });
+    return {
+        ...getFileChangesConfig(),
+        pullRequestAuthor: getConfigValueOrDefault('pr-author', 'guardian-ci'),
+        pullRequestPrefix: getConfigValueOrDefault('pr-prefix', 'chore(release):'),
+        releaseBranch: getConfigValueOrDefault('release-branch', 'main'),
+        newBranchPrefix: getConfigValueOrDefault('branch-prefix', 'release-'),
+        commitUser: getConfigValueOrDefault('commit-user', 'guardian-ci'),
+        commitEmail: getConfigValueOrDefault('commit-email', 'guardian-ci@users.noreply.github.com'),
+    };
 };
 const config_ = {
     getConfigValueOrDefault,
@@ -7801,15 +7789,6 @@ const config_ = {
 };
 
 ;// CONCATENATED MODULE: ./src/index.ts
-var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 
 
@@ -7819,50 +7798,47 @@ var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argu
 
 
 
-function run() {
-    var _a;
-    return src_awaiter(this, void 0, void 0, function* () {
-        try {
-            (0,core.info)(`Running ${pkg_name}`);
-            (0,core.debug)(`Event name: ${github.context.eventName}`);
-            (0,core.debug)(`Action type: ${(_a = github.context.payload.action) !== null && _a !== void 0 ? _a : 'Unknown'}`);
-            const config = getConfig();
-            switch (github.context.eventName) {
-                case 'push': {
-                    const payload = github.context.payload;
-                    yield raisePullRequest({ payload, config });
-                    break;
+async function run() {
+    try {
+        (0,core.info)(`Running ${pkg_name}`);
+        (0,core.debug)(`Event name: ${github.context.eventName}`);
+        (0,core.debug)(`Action type: ${github.context.payload.action ?? 'Unknown'}`);
+        const config = getConfig();
+        switch (github.context.eventName) {
+            case 'push': {
+                const payload = github.context.payload;
+                await raisePullRequest({ payload, config });
+                break;
+            }
+            case 'pull_request': {
+                const payload = github.context.payload;
+                const prData = {
+                    owner: payload.repository.owner.login,
+                    repo: payload.repository.name,
+                    pull_number: payload.pull_request.number,
+                };
+                // PR information isn't necessarily up to date in webhook payload
+                // Get PR from the API to be sure
+                const { data: pullRequest } = await octokit.rest.pulls.get(prData);
+                (0,core.debug)(`Pull request: ${payload.pull_request.number}`);
+                if (shouldMergePullRequest({ pullRequest, config })) {
+                    await validatePullRequest({ pullRequest, prData, config });
+                    await mergePullRequest({ pullRequest, prData, payload });
                 }
-                case 'pull_request': {
-                    const payload = github.context.payload;
-                    const prData = {
-                        owner: payload.repository.owner.login,
-                        repo: payload.repository.name,
-                        pull_number: payload.pull_request.number,
-                    };
-                    // PR information isn't necessarily up to date in webhook payload
-                    // Get PR from the API to be sure
-                    const { data: pullRequest } = yield octokit.rest.pulls.get(prData);
-                    (0,core.debug)(`Pull request: ${payload.pull_request.number}`);
-                    if (shouldMergePullRequest({ pullRequest, config })) {
-                        yield validatePullRequest({ pullRequest, prData, config });
-                        yield mergePullRequest({ pullRequest, prData, payload });
-                    }
-                    break;
-                }
-                default:
-                    throw new Error(`Unknown eventName: ${github.context.eventName}`);
+                break;
             }
+            default:
+                throw new Error(`Unknown eventName: ${github.context.eventName}`);
         }
-        catch (error) {
-            if (error instanceof Error) {
-                (0,core.setFailed)(error.message);
-            }
-            else {
-                throw error;
-            }
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            (0,core.setFailed)(error.message);
         }
-    });
+        else {
+            throw error;
+        }
+    }
 }
 void run();
 
