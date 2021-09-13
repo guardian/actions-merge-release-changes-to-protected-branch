@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@guardian/eslint-config-typescript": "^0.6.1",
-    "@guardian/prettier": "^0.6.0",
+    "@guardian/prettier": "^0.7.0",
     "@octokit/types": "^6.27.1",
     "@octokit/webhooks-types": "^4.3.0",
     "@types/jest": "^27.0.1",
