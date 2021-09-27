@@ -54,7 +54,9 @@ jobs:
               with:
                   persist-credentials: false
             - uses: guardian/actions-setup-node@main
-            - uses: bahmutov/npm-install@v1
+              with:
+                  cache: 'npm'
+            - run: npm ci
             - name: Release
               env:
                   GITHUB_TOKEN: ${{ secrets.GU_GITHUB_TOKEN }}
@@ -99,7 +101,9 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - uses: guardian/actions-setup-node@main
-            - uses: bahmutov/npm-install@v1
+              with:
+                  cache: 'npm'
+            - run: npm ci
             - run: npm run test
     approve:
         runs-on: ubuntu-latest
