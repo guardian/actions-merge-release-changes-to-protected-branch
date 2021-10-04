@@ -22,7 +22,7 @@
     "@guardian/eslint-config-typescript": "^0.7.0",
     "@guardian/prettier": "^0.7.0",
     "@octokit/types": "^6.28.1",
-    "@octokit/webhooks-types": "^4.7.0",
+    "@octokit/webhooks-types": "^4.8.2",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.9.4",
     "@vercel/ncc": "^0.31.1",
