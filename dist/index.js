@@ -7569,6 +7569,12 @@ exports._ = { validateFiles };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports._ = exports.getConfig = void 0;
 const core_1 = __nccwpck_require__(2186);
+var PackageManager;
+(function (PackageManager) {
+    PackageManager["NPM"] = "npm";
+    PackageManager["YARN"] = "yarn";
+})(PackageManager || (PackageManager = {}));
+const PackageManagers = Object.values(PackageManager);
 const versionBumpChange = ['-  "version": "', '+  "version": "'];
 const npmLockfileChanges = (npmLockfileVersion) => {
     switch (npmLockfileVersion) {
@@ -7594,11 +7600,10 @@ const packageManagerConfig = (npmLockfileVersion) => {
         'package.json': versionBumpChange,
     };
     return {
-        yarn: packageJsonChanges,
-        npm: Object.assign(Object.assign({}, packageJsonChanges), { 'package-lock.json': npmLockfileChanges(npmLockfileVersion) }),
+        [PackageManager.YARN]: packageJsonChanges,
+        [PackageManager.NPM]: Object.assign(Object.assign({}, packageJsonChanges), { 'package-lock.json': npmLockfileChanges(npmLockfileVersion) }),
     };
 };
-const allowedPackageManagerValues = ['yarn', 'npm'];
 const getConfigValueOrDefault = (key, d) => {
     const input = (0, core_1.getInput)(key);
     return input && input !== '' ? input : d;
@@ -7634,11 +7639,11 @@ const parseAdditionalChanges = (additionalChanges) => {
 const parseIntOrDefault = (value, defaultValue) => isNaN(parseInt(value)) ? defaultValue : parseInt(value);
 const getFileChangesConfig = () => {
     const pm = getConfigValueOrDefault('package-manager', 'npm');
+    if (!PackageManagers.includes(pm)) {
+        throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${PackageManagers.join(', ')}`);
+    }
     const defaultNpmLockfileVersion = 1;
     const npmLockfileVersionInput = parseIntOrDefault(getConfigValueOrDefault('npm-lockfile-version', defaultNpmLockfileVersion.toString()), defaultNpmLockfileVersion);
-    if (!allowedPackageManagerValues.includes(pm)) {
-        throw new Error(`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(', ')}`);
-    }
     const pmConfig = packageManagerConfig(npmLockfileVersionInput);
     const pmChanges = pmConfig[pm];
     return { expectedChanges: Object.assign(Object.assign({}, getAdditionalChanges()), pmChanges) };

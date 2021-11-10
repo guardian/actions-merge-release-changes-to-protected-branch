@@ -1,5 +1,12 @@
 import { getInput } from '@actions/core';
 
+enum PackageManager {
+	NPM = 'npm',
+	YARN = 'yarn',
+}
+
+const PackageManagers: string[] = Object.values(PackageManager);
+
 export interface Config extends FileChangesConfig {
 	pullRequestAuthor: string;
 	pullRequestPrefix: string;
@@ -41,21 +48,19 @@ const npmLockfileChanges = (npmLockfileVersion: number): string[] => {
 
 const packageManagerConfig = (
 	npmLockfileVersion: number,
-): Record<string, FileChanges> => {
+): Record<PackageManager, FileChanges> => {
 	const packageJsonChanges: FileChanges = {
 		'package.json': versionBumpChange,
 	};
 
 	return {
-		yarn: packageJsonChanges,
-		npm: {
+		[PackageManager.YARN]: packageJsonChanges,
+		[PackageManager.NPM]: {
 			...packageJsonChanges,
 			'package-lock.json': npmLockfileChanges(npmLockfileVersion),
 		},
 	};
 };
-
-const allowedPackageManagerValues = ['yarn', 'npm'];
 
 const getConfigValueOrDefault = (key: string, d: string): string => {
 	const input = getInput(key);
@@ -104,7 +109,18 @@ const parseIntOrDefault = (value: string, defaultValue: number): number =>
 	isNaN(parseInt(value)) ? defaultValue : parseInt(value);
 
 const getFileChangesConfig = (): FileChangesConfig => {
-	const pm = getConfigValueOrDefault('package-manager', 'npm');
+	const pm: PackageManager = getConfigValueOrDefault(
+		'package-manager',
+		'npm',
+	) as PackageManager;
+
+	if (!PackageManagers.includes(pm)) {
+		throw new Error(
+			`Invalid package-manager value (${pm}) provided. Allowed values are: ${PackageManagers.join(
+				', ',
+			)}`,
+		);
+	}
 
 	const defaultNpmLockfileVersion = 1;
 	const npmLockfileVersionInput: number = parseIntOrDefault(
@@ -114,14 +130,6 @@ const getFileChangesConfig = (): FileChangesConfig => {
 		),
 		defaultNpmLockfileVersion,
 	);
-
-	if (!allowedPackageManagerValues.includes(pm)) {
-		throw new Error(
-			`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(
-				', ',
-			)}`,
-		);
-	}
 
 	const pmConfig = packageManagerConfig(npmLockfileVersionInput);
 
