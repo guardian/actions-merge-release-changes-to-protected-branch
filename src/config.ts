@@ -1,5 +1,12 @@
 import { getInput } from '@actions/core';
 
+enum PackageManager {
+	NPM = 'npm',
+	YARN = 'yarn',
+}
+
+const PackageManagers: string[] = Object.values(PackageManager);
+
 export interface Config extends FileChangesConfig {
 	pullRequestAuthor: string;
 	pullRequestPrefix: string;
@@ -17,17 +24,43 @@ interface FileChangesConfig {
 
 const versionBumpChange = ['-  "version": "', '+  "version": "'];
 
-const packageManagerConfig: Record<string, FileChanges> = {
-	npm: {
-		'package.json': versionBumpChange,
-		'package-lock.json': versionBumpChange,
-	},
-	yarn: {
-		'package.json': versionBumpChange,
-	},
+const npmLockfileChanges = (npmLockfileVersion: number): string[] => {
+	switch (npmLockfileVersion) {
+		case 1: {
+			return versionBumpChange;
+		}
+		case 2: {
+			/*
+			The v2 npm lockfile contains the version of a package twice:
+				- `.version`
+			  	- `.packages."".version`
+
+			As a result, we expect more changes.
+			 */
+			return [...versionBumpChange, ...versionBumpChange];
+		}
+		default:
+			throw new Error(
+				`NPM lockfile version ${npmLockfileVersion} is not supported. Contributions welcome!`,
+			);
+	}
 };
 
-const allowedPackageManagerValues = Object.keys(packageManagerConfig);
+const packageManagerConfig = (
+	npmLockfileVersion: number,
+): Record<PackageManager, FileChanges> => {
+	const packageJsonChanges: FileChanges = {
+		'package.json': versionBumpChange,
+	};
+
+	return {
+		[PackageManager.YARN]: packageJsonChanges,
+		[PackageManager.NPM]: {
+			...packageJsonChanges,
+			'package-lock.json': npmLockfileChanges(npmLockfileVersion),
+		},
+	};
+};
 
 const getConfigValueOrDefault = (key: string, d: string): string => {
 	const input = getInput(key);
@@ -72,17 +105,35 @@ const parseAdditionalChanges = (additionalChanges: string): FileChanges => {
 	return json;
 };
 
-const getFileChangesConfig = (): FileChangesConfig => {
-	const pm = getConfigValueOrDefault('package-manager', 'npm');
+const parseIntOrDefault = (value: string, defaultValue: number): number =>
+	isNaN(parseInt(value)) ? defaultValue : parseInt(value);
 
-	if (!allowedPackageManagerValues.includes(pm)) {
+const getFileChangesConfig = (): FileChangesConfig => {
+	const pm: PackageManager = getConfigValueOrDefault(
+		'package-manager',
+		'npm',
+	) as PackageManager;
+
+	if (!PackageManagers.includes(pm)) {
 		throw new Error(
-			`Invalid package-manager value (${pm}) provided. Allowed values are: ${allowedPackageManagerValues.join(
+			`Invalid package-manager value (${pm}) provided. Allowed values are: ${PackageManagers.join(
 				', ',
 			)}`,
 		);
 	}
-	const pmChanges = packageManagerConfig[pm];
+
+	const defaultNpmLockfileVersion = 1;
+	const npmLockfileVersionInput: number = parseIntOrDefault(
+		getConfigValueOrDefault(
+			'npm-lockfile-version',
+			defaultNpmLockfileVersion.toString(),
+		),
+		defaultNpmLockfileVersion,
+	);
+
+	const pmConfig = packageManagerConfig(npmLockfileVersionInput);
+
+	const pmChanges = pmConfig[pm];
 
 	return { expectedChanges: { ...getAdditionalChanges(), ...pmChanges } };
 };

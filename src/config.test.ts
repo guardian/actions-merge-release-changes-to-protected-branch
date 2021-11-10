@@ -102,4 +102,34 @@ describe('The getFileChangesConfig function', () => {
 			},
 		});
 	});
+
+	it('handles v2 of the npm lockfile', () => {
+		mockGetInput.mockImplementation((name: string): string => {
+			switch (name) {
+				case 'package-manager': {
+					return 'npm';
+				}
+				case 'npm-lockfile-version': {
+					return '2';
+				}
+				default: {
+					return JSON.stringify({
+						'README.md': ['one'],
+					});
+				}
+			}
+		});
+		expect(_.getFileChangesConfig()).toEqual({
+			expectedChanges: {
+				'package.json': ['-  "version": "', '+  "version": "'],
+				'package-lock.json': [
+					'-  "version": "',
+					'+  "version": "',
+					'-  "version": "',
+					'+  "version": "',
+				],
+				'README.md': ['one'],
+			},
+		});
+	});
 });
