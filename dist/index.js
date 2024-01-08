@@ -30303,7 +30303,9 @@ exports.shouldMergePullRequest = void 0;
 const core_1 = __nccwpck_require__(2186);
 const shouldMergePullRequest = ({ pullRequest, config, }) => {
     (0, core_1.info)('Checking pull request is valid');
-    if (!pullRequest.user ||
+    if (
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- keeping code as it was before upgrading eslint
+    !pullRequest.user ||
         pullRequest.user.login !== config.pullRequestAuthor) {
         (0, core_1.info)(`Pull request is not authored by ${config.pullRequestAuthor}, ignoring.`);
         return false;
@@ -30449,7 +30451,6 @@ const parseAdditionalChanges = (additionalChanges) => {
     }
     let json;
     try {
-        // eslint-disable-next-line prefer-const -- this is setting the value above so I don't know what eslint is complaining about
         json = JSON.parse(additionalChanges);
     }
     catch (err) {

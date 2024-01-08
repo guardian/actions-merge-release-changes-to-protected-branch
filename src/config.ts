@@ -75,7 +75,6 @@ const parseAdditionalChanges = (additionalChanges: string): FileChanges => {
 
 	let json;
 	try {
-		// eslint-disable-next-line prefer-const -- this is setting the value above so I don't know what eslint is complaining about
 		json = JSON.parse(additionalChanges) as FileChanges;
 	} catch (err) {
 		throw new Error('Invalid JSON provided for additional-changes input');
