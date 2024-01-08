@@ -1,6 +1,6 @@
 {
   "name": "@guardian/actions-merge-release-changes-to-protected-branch",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "A GitHub action to open, approve and merge a PR of changes generated during a release on a protected branch",
   "main": "dist/index.js",
   "scripts": {
