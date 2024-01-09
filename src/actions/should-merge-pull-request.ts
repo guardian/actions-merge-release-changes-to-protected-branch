@@ -17,6 +17,7 @@ export const shouldMergePullRequest = ({
 	info('Checking pull request is valid');
 
 	if (
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- keeping code as it was before upgrading eslint
 		!pullRequest.user ||
 		pullRequest.user.login !== config.pullRequestAuthor
 	) {
