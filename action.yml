@@ -1,7 +1,7 @@
 name: '@guardian/actions-merge-release-changes-to-protected-branch'
 description: 'A GitHub action to open, approve and merge a PR of changes generated during a release on a protected branch'
 runs:
-  using: 'node12'
+  using: 'node20'
   main: 'dist/index.js'
 inputs:
   github-token:
